@@ -19,7 +19,7 @@ PROFILE_TEMPLATE = r'''Имя:.*\s*
 def accessible_profile_data(user_id, peer_id, name):
 
     try:
-        with open(f'Bot/heroes/{name}.json', 'r') as profile:
+        with open(f'heroes/{name}.json', 'r') as profile:
             profile_data = json.load(profile)
         if profile_data["player_id"] != user_id:
             vk.messages.send(random_id=0, peer_id=peer_id,

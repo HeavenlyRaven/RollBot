@@ -6,7 +6,7 @@ from session_info import vk
 
 def notify_about_reaction(peer_id, name):
     try:
-        with open(f'Bot/heroes/{name}.json', 'r') as profile:
+        with open(f'heroes/{name}.json', 'r') as profile:
             profile_data = json.load(profile)
         vk.messages.send(random_id=0, peer_id=peer_id, message=f"Запрос на реакцию для [id{profile_data['player_id']}|{profile_data['genitive']}]")
     except FileNotFoundError:
@@ -26,7 +26,7 @@ def show_profile(peer_id, name):
         return '; '.join(item_list)
 
     try:
-        with open(f'Bot/heroes/{name}.json', 'r') as profile:
+        with open(f'heroes/{name}.json', 'r') as profile:
             jp = json.load(profile)
 
         skills = '\n'.join(jp['skills'])
@@ -73,7 +73,7 @@ def reveal_ra(profile_data, name):
     vk.messages.send(random_id=0, peer_id=profile_data["RP_id"],
                      message=f'Подготовленное действие {profile_data["genitive"]}: {profile_data["ready action"]}')
     profile_data["ready action"] = ""
-    with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+    with open(f'heroes/{name}.json', 'w') as json_profile:
         json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
@@ -81,14 +81,14 @@ def clear_ra(profile_data, name):
     vk.messages.send(random_id=0, peer_id=profile_data["RP_id"],
                      message=f'Подготовленное действие {profile_data["genitive"]} было отменено')
     profile_data["ready action"] = ""
-    with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+    with open(f'heroes/{name}.json', 'w') as json_profile:
         json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
 def delete_profile(profile_data, peer_id, name):
     vk.messages.send(random_id=0, peer_id=peer_id,
                      message=f'Профиль {profile_data["genitive"]} успешно удален.')
-    remove(f'Bot/heroes/{name}.json')
+    remove(f'heroes/{name}.json')
 
 
 def set_ra(profile_data, peer_id, name, ready_action):
@@ -98,7 +98,7 @@ def set_ra(profile_data, peer_id, name, ready_action):
         profile_data["ready action"] = ready_action
         vk.messages.send(random_id=0, peer_id=profile_data["RP_id"],
                          message=f'{profile_data["nominative"]} подготовил{"a" if  profile_data["gender"] == "женский" else ""} какое-то действие')
-    with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+    with open(f'heroes/{name}.json', 'w') as json_profile:
         json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
@@ -110,7 +110,7 @@ def learn(profile_data, peer_id, name, skill):
         profile_data['skills'].append(skill)
         vk.messages.send(random_id=0, peer_id=peer_id,
                          message=f'{profile_data["nominative"]} изучает новый скилл: {skill}!')
-        with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+        with open(f'heroes/{name}.json', 'w') as json_profile:
             json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
@@ -122,7 +122,7 @@ def unlearn(profile_data, peer_id, name, skill):
         profile_data['skills'].remove(skill)
         vk.messages.send(random_id=0, peer_id=peer_id,
                          message=f'{profile_data["nominative"]} больше не может использовать скилл "{skill}"')
-        with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+        with open(f'heroes/{name}.json', 'w') as json_profile:
             json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
@@ -146,7 +146,7 @@ def equip(profile_data, peer_id, name, item, number, first_container, second_con
                 profile_data[second_container].append(item)
             vk.messages.send(random_id=0, peer_id=peer_id,
                              message=f'{profile_data["nominative"]} берет в {hand} руку: {item}')
-            with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+            with open(f'heroes/{name}.json', 'w') as json_profile:
                 json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
         elif second_container == 'clothes':
             if len(profile_data['clothes']) < 24:
@@ -154,7 +154,7 @@ def equip(profile_data, peer_id, name, item, number, first_container, second_con
                     profile_data['clothes'].append(item)
                     vk.messages.send(random_id=0, peer_id=peer_id,
                                      message=f'{profile_data["nominative"]} надевает: {item}')
-                    with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+                    with open(f'heroes/{name}.json', 'w') as json_profile:
                         json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
                 else:
                     vk.messages.send(random_id=0, peer_id=peer_id,
@@ -167,13 +167,13 @@ def equip(profile_data, peer_id, name, item, number, first_container, second_con
                 profile_data['waist'][item] += number
                 vk.messages.send(random_id=0, peer_id=peer_id,
                                  message=f'{profile_data["nominative"]} вешает на пояс: {item} [{number}].')
-                with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+                with open(f'heroes/{name}.json', 'w') as json_profile:
                     json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
             elif len(profile_data['waist']) < 12:
                 profile_data['waist'].update({item: number})
                 vk.messages.send(random_id=0, peer_id=peer_id,
                                  message=f'{profile_data["nominative"]} вешает на пояс: {item} [{number}].')
-                with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+                with open(f'heroes/{name}.json', 'w') as json_profile:
                     json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
             else:
                 vk.messages.send(random_id=0, peer_id=peer_id,
@@ -213,7 +213,7 @@ def add_item(profile_data, peer_id, name, item, number, equip_flag=False):
     else:
         add_message = f'Добавлено в инвентарь {profile_data["genitive"]}: {item} [{number}]'
     vk.messages.send(random_id=0, peer_id=peer_id, message=add_message)
-    with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+    with open(f'heroes/{name}.json', 'w') as json_profile:
         json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
 
 
@@ -230,7 +230,7 @@ def remove_item(profile_data, peer_id, name, item, number):
                 profile_data[slot].pop(item)
             vk.messages.send(random_id=0, peer_id=peer_id,
                              message=f'Убрано {"из инвентаря" if slot == "inventory" else "с пояса"} {profile_data["genitive"]}: {item} [{number}]')
-            with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+            with open(f'heroes/{name}.json', 'w') as json_profile:
                 json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
         else:
             vk.messages.send(random_id=0, peer_id=peer_id,
@@ -248,7 +248,7 @@ def remove_item(profile_data, peer_id, name, item, number):
             profile_data[slot].remove(item)
             vk.messages.send(random_id=0, peer_id=peer_id,
                              message=f'{profile_data["nominative"]}{" снимает с себя и" if slot == "clothes" else ""} выбрасывает: {item}')
-            with open(f'Bot/heroes/{name}.json', 'w') as json_profile:
+            with open(f'heroes/{name}.json', 'w') as json_profile:
                 json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)
     else:
         vk.messages.send(random_id=0, peer_id=peer_id,

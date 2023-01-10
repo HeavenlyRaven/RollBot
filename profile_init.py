@@ -41,5 +41,5 @@ def init(user_id, RP_id, new_profile_text, eng_name, gen_name):
                     "ready action": "",
                     "RP_id": RP_id+2000000000
                 }
-    with open(f'Bot/heroes/{eng_name}.json', 'x') as json_profile:
+    with open(f'heroes/{eng_name}.json', 'x') as json_profile:
         json.dump(jp, json_profile, indent=4, ensure_ascii=False)

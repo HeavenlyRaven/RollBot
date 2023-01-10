@@ -45,7 +45,7 @@ def roll(toss, user_id, peer_id):
     if re.search(r'\b[Ff][Oo][Rr]\s[^\]]*\]', toss) is not None:
         playername = namestat(toss).strip()
         try:
-            with open(f'Bot/heroes/{playername}.json', 'r') as profile:
+            with open(f'heroes/{playername}.json', 'r') as profile:
                 profile_data = json.load(profile)
             name = profile_data['genitive']
             profile_player = True
