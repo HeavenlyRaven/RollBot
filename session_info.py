@@ -1,6 +1,12 @@
 import vk_api
+import json
 
-with open("token.txt", 'r') as file:
-    token = file.read()
-vk_session = vk_api.VkApi(token=token)
+with open("config.json", 'r') as config_file:
+    config = json.load(config_file)
+
+TOKEN = config['token']
+ADMIN_ID = config['admin_id']
+GROUP_ID = config['group_id']
+
+vk_session = vk_api.VkApi(token=TOKEN)
 vk = vk_session.get_api()

@@ -2,4 +2,4 @@
 /.idea/
 /heroes/
 queues.json
-token.txt
+config.json

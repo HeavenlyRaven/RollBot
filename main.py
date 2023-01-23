@@ -1,29 +1,21 @@
-from flask import Flask, request
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 import re
 from random import choice
 
-from session_info import vk
+from session_info import vk, vk_session, GROUP_ID, ADMIN_ID
 from utils import EQUIP_LIST, PROFILE_TEMPLATE, accessible_profile_data
 from roll import roll
 from profile_init import init
 import bot_commands as bc
 import turn_tools as tt
 
+longpoll = VkBotLongPoll(vk_session, GROUP_ID)
 
-app = Flask(__name__)
-
-
-@app.route('/', methods=['POST'])
-def processing():
-
-    data = request.json
-
-    if data['type'] == 'message_new' and data['object']['message']['text']:
-        message = data['object']['message']
-        peer_id = message['peer_id']
-        text = message['text']
-        user_id = message['from_id']
-
+for event in longpoll.listen():
+    if event.type == VkBotEventType.MESSAGE_NEW and event.message["text"]:
+        peer_id = event.message['peer_id']
+        text = event.message['text']
+        user_id = event.message['from_id']
         try:
             if commands := re.findall(r'\[[^]]+]', text):
                 for command in commands:
@@ -88,7 +80,6 @@ def processing():
                     vk.messages.send(random_id=0, peer_id=peer_id, message='Профиль не соответствует шаблону.')
         except BaseException as error:
             vk.messages.send(random_id=0, peer_id=peer_id,
-                             message="Короче, Егор, тут опять какой-то кринж с ботом произошёл. Отправил тебе всю инфу в лс.")
-            vk.messages.send(random_id=0, peer_id=151029689,
-                             message=f"Данные запроса:\n\n{str(data)}\n\nИнфа об ошибке:\n\n{str(error)}")
-    return 'ok'
+                             message="Короче, Егор, опять какой-то кринж с ботом произошёл. Отправил всю инфу в лс.")
+            vk.messages.send(random_id=0, peer_id=ADMIN_ID,
+                             message=f"Данные запроса:\n\n{event.raw}\n\nИнфа об ошибке:\n\n{str(error)}")
