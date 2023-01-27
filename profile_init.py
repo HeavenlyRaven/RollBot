@@ -1,35 +1,32 @@
-import re
 import json
 
 
-def init(user_id, RP_id, new_profile_text, eng_name, gen_name):
-    nom_name = new_profile_text[4:re.search(r'[\n.]', new_profile_text).start()].strip()
-    gender_start = new_profile_text.find('Пол:')+4
-    hand_start = new_profile_text.find('Ведущая рука:')+13
-    gender = new_profile_text[gender_start: gender_start+8].strip()
-    hand = new_profile_text[hand_start: hand_start+7].strip()
-    stats = new_profile_text[new_profile_text.find('Статы:')+6:].strip().splitlines()
-    values = [int(re.search(r'\d+', stat)[0]) for stat in stats]
-    jp = {
-                    "player_id": user_id,
-                    "nominative": nom_name,
-                    "genitive": gen_name,
-                    "gender": gender.lower(),
-                    "dominant hand": hand.lower(),
+def auto_stat(value):
+    return int(value) if value is not None else 60
 
-                    "strength": values[0],
-                    "agility": values[1],
-                    "magic": values[2],
-                    "charisma": values[3],
-                    "endurance": values[4],
-                    "intelligence": values[5],
-                    "perception": values[6],
+
+def init(user_id, rp_id, template_match, eng_name, gen_name):
+    tm = template_match
+    profile_data = {
+                    "player_id": user_id,
+                    "nominative": tm[1],
+                    "genitive": gen_name,
+                    "gender": tm[2].lower(),
+                    "dominant hand": tm[3].lower() if tm[3] is not None else "правая",
+
+                    "strength": auto_stat(tm[4]),
+                    "agility": auto_stat(tm[5]),
+                    "magic": (magic := auto_stat(tm[6])),
+                    "charisma": auto_stat(tm[7]),
+                    "endurance": (endurance := auto_stat(tm[8])),
+                    "intelligence": auto_stat(tm[9]),
+                    "perception": auto_stat(tm[10]),
 
                     "luck": 60,
 
-                    "health": values[4]*10,
-                    "stamina": values[4]*5,
-                    "mana": values[2]*10,
+                    "health": endurance*10,
+                    "stamina": endurance*5,
+                    "mana": magic*10,
 
                     "right hand": [],
                     "left hand": [],
@@ -39,7 +36,7 @@ def init(user_id, RP_id, new_profile_text, eng_name, gen_name):
                     "inventory": {},
 
                     "ready action": "",
-                    "RP_id": RP_id+2000000000
+                    "RP_id": rp_id
                 }
-    with open(f'heroes/{eng_name}.json', 'x') as json_profile:
-        json.dump(jp, json_profile, indent=4, ensure_ascii=False)
+    with open(f'heroes/{eng_name}.json', 'x', encoding="utf-8") as json_profile:
+        json.dump(profile_data, json_profile, indent=4, ensure_ascii=False)

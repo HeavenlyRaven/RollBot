@@ -67,12 +67,10 @@ for event in longpoll.listen():
                             bc.unlearn(profile_data, peer_id, name=m[2], skill=m[1])
                     elif re.match(r'\[get id]', command) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"ID этой конференции: {peer_id}")
-            if (pm := re.match(r'{create profile: ([^]]*), ([^]]*), (\d)}', text)) is not None:
-                new_profile_text = text[pm.end():].strip()
-                if re.fullmatch(PROFILE_TEMPLATE, new_profile_text, flags=re.IGNORECASE) is not None:
-                    RP_id = int(pm[3])
+            if (pm := re.match(r'{create profile: ([^]]*), ([^]]*)}', text)) is not None:
+                if (template_match := re.fullmatch(PROFILE_TEMPLATE, text[pm.end():].strip(), flags=re.IGNORECASE)) is not None:
                     try:
-                        init(user_id, RP_id, new_profile_text, eng_name=pm[1], gen_name=pm[2])
+                        init(user_id, peer_id, template_match, eng_name=pm[1], gen_name=pm[2])
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Профиль {pm[2]} успешно создан.')
                     except FileExistsError:
                         vk.messages.send(random_id=0, peer_id=peer_id, message='Профиль с таким именем уже существует')
