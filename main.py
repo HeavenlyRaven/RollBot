@@ -67,6 +67,8 @@ for event in longpoll.listen():
                             bc.unlearn(profile_data, peer_id, name=m[2], skill=m[1])
                     elif re.match(r'\[get id]', command) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"ID этой конференции: {peer_id}")
+                    elif (m := re.match(r'\[create game: ([^]]*)]', command)) is not None:
+                        bc.create_game(peer_id, user_id, name=m[1])
             if (pm := re.match(r'{create profile: ([^]]*), ([^]]*)}', text)) is not None:
                 if (template_match := re.fullmatch(PROFILE_TEMPLATE, text[pm.end():].strip(), flags=re.IGNORECASE)) is not None:
                     try:

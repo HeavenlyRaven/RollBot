@@ -1,7 +1,16 @@
 import json
-from os import remove
+from os import remove, symlink
 
 from session_info import vk
+from game import Game
+
+
+def create_game(peer_id, user_id, name):
+    chat_members = vk.messages.getConversationMembers(peer_id=peer_id)
+    players = [{"id": int(item["member_id"]), "main": None} for item in chat_members["items"]]
+    Game(name=name, chat_id=peer_id, gm_id=user_id, players=players).save()
+    symlink(f"games/{name}.json", f"games/{peer_id}.json")
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f"Игра с названием {name} была успешно создана в текущей конференции.")
 
 
 def notify_about_reaction(peer_id, name):

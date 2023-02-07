@@ -1,6 +1,7 @@
 #!/bin/bash
 # creating /heroes directory
 mkdir heroes
+mkdir games
 # creating config.json
 echo '{"token": "", "admin_id": null, "group_id": null}' > config.json
 # creating queues.json

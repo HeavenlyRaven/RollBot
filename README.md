@@ -2,7 +2,7 @@
 
 Game mechanics:
 
-- [ ] ```[create game: %gname%]```
+- [x] ```[create game: %gname%]```
 - [ ] ```[make main in %gname%: %char_name%]```
 - [ ] ```[assign GM in %gname%]```
 

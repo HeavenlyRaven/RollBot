@@ -1,5 +1,6 @@
 /venv/
 /.idea/
 /heroes/
+/games/
 queues.json
 config.json
