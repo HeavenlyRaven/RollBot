@@ -69,6 +69,8 @@ for event in longpoll.listen():
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"ID этой конференции: {peer_id}")
                     elif (m := re.match(r'\[create game: ([^]]*)]', command)) is not None:
                         bc.create_game(peer_id, user_id, name=m[1])
+                    elif (m := re.match(r'\[delete game: ([^]]*)]', command)) is not None:
+                        bc.delete_game(peer_id, user_id, name=m[1])
             if (pm := re.match(r'{create profile: ([^]]*), ([^]]*)}', text)) is not None:
                 if (template_match := re.fullmatch(PROFILE_TEMPLATE, text[pm.end():].strip(), flags=re.IGNORECASE)) is not None:
                     try:

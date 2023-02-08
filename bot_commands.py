@@ -1,16 +1,31 @@
 import json
-from os import remove, symlink
+import os
 
 from session_info import vk
 from game import Game
 
 
 def create_game(peer_id, user_id, name):
-    chat_members = vk.messages.getConversationMembers(peer_id=peer_id)
-    players = [{"id": int(item["member_id"]), "main": None} for item in chat_members["items"]]
-    Game(name=name, chat_id=peer_id, gm_id=user_id, players=players).save()
-    symlink(f"games/{name}.json", f"games/{peer_id}.json")
-    vk.messages.send(random_id=0, peer_id=peer_id, message=f"Игра с названием {name} была успешно создана в текущей конференции.")
+    if os.path.isfile(f"games/{peer_id}.json"):
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции уже есть игра.")
+    elif os.path.isfile(f"games/{name}.json"):
+        vk.messages.send(random_id=0, peer_id=peer_id, message="Игра с таким названием уже существует.")
+    else:
+        chat_members = vk.messages.getConversationMembers(peer_id=peer_id)
+        players = [{"id": int(item["member_id"]), "main": None} for item in chat_members["items"]]
+        Game(name=name, chat_id=peer_id, gm_id=user_id, players=players).save()
+        os.symlink(f"games/{name}.json", f"games/{peer_id}.json")
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f"Игра с названием {name} была успешно создана в текущей конференции.")
+
+
+def delete_game(peer_id, user_id, name):
+    if not os.path.isfile(f"games/{name}.json"):
+        vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием не существует.")
+    elif Game.load(name).gm_id != user_id:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="У вас нет права доступа. Только ГМ может удалить игру.")
+    else:
+        os.remove(f"games/{name}.json")
+        os.remove(f"games/{peer_id}.json")
 
 
 def notify_about_reaction(peer_id, name):
@@ -97,7 +112,7 @@ def clear_ra(profile_data, name):
 def delete_profile(profile_data, peer_id, name):
     vk.messages.send(random_id=0, peer_id=peer_id,
                      message=f'Профиль {profile_data["genitive"]} успешно удален.')
-    remove(f'heroes/{name}.json')
+    os.remove(f'heroes/{name}.json')
 
 
 def set_ra(profile_data, peer_id, name, ready_action):
