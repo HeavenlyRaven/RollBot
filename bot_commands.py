@@ -2,30 +2,44 @@ import json
 import os
 
 from session_info import vk
-from game import Game
+from game import Game, GameDoesNotExistError
 
 
 def create_game(peer_id, user_id, name):
-    if os.path.isfile(f"games/{peer_id}.json"):
+    if Game.exists(peer_id):
         vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции уже есть игра.")
-    elif os.path.isfile(f"games/{name}.json"):
+    elif Game.exists(name):
         vk.messages.send(random_id=0, peer_id=peer_id, message="Игра с таким названием уже существует.")
     else:
-        chat_members = vk.messages.getConversationMembers(peer_id=peer_id)
-        players = [{"id": int(item["member_id"]), "main": None} for item in chat_members["items"]]
-        Game(name=name, chat_id=peer_id, gm_id=user_id, players=players).save()
+        Game(name=name, chat_id=peer_id, gm_id=user_id).save()
         os.symlink(f"games/{name}.json", f"games/{peer_id}.json")
         vk.messages.send(random_id=0, peer_id=peer_id, message=f"Игра с названием {name} была успешно создана в текущей конференции.")
 
 
 def delete_game(peer_id, user_id, name):
-    if not os.path.isfile(f"games/{name}.json"):
+    try:
+        game = Game.load(name)
+    except GameDoesNotExistError:
         vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием не существует.")
-    elif Game.load(name).gm_id != user_id:
-        vk.messages.send(random_id=0, peer_id=peer_id, message="У вас нет права доступа. Только ГМ может удалить игру.")
     else:
-        os.remove(f"games/{name}.json")
-        os.remove(f"games/{peer_id}.json")
+        if game.gm_id != user_id:
+            vk.messages.send(random_id=0, peer_id=peer_id,
+                             message="У вас нет права доступа. Только ГМ может удалить игру.")
+        else:
+            os.remove(f"games/{name}.json")
+            os.remove(f"games/{game.chat_id}.json")
+
+
+def make_main(profile_data, peer_id, user_id, game_name, hero_name):
+    try:
+        game = Game.load(game_name)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием не существует.")
+    else:
+        game.players[user_id] = hero_name
+        game.save()
+        vk.messages.send(random_id=0, peer_id=peer_id,
+                         messgae=f"Теперь вашим главным персонажем в {game_name} является {profile_data['nominative']}")
 
 
 def notify_about_reaction(peer_id, name):

@@ -1,4 +1,7 @@
 import json
+import os
+
+from session_info import vk
 
 
 class GameDoesNotExistError(Exception):
@@ -8,13 +11,23 @@ class GameDoesNotExistError(Exception):
 
 class Game:
 
-    def __init__(self, name, chat_id, gm_id=None, players=None, queues=None):
+    def __init__(self, name, chat_id, gm_id, players=None, queues=None):
 
         self.name = name
         self.chat_id = chat_id
         self.gm_id = gm_id
-        self.players = players if players is not None else []
+
+        if players is not None:
+            self.players = players
+        else:
+            chat_members = vk.messages.getConversationMembers(peer_id=chat_id)
+            self.players = {int(item["member_id"]): None for item in chat_members["items"]}
+
         self.queues = queues if queues is not None else []
+
+    @classmethod
+    def exists(cls, identifier):
+        return os.path.isfile(f"games/{identifier}.json")
 
     @classmethod
     def load(cls, identifier):

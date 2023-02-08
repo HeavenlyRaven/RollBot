@@ -71,6 +71,9 @@ for event in longpoll.listen():
                         bc.create_game(peer_id, user_id, name=m[1])
                     elif (m := re.match(r'\[delete game: ([^]]*)]', command)) is not None:
                         bc.delete_game(peer_id, user_id, name=m[1])
+                    elif (m := re.match(r'\[make main in ([^]]*): ([^]]*)]', command)) is not None:
+                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[2])) is not None:
+                            bc.make_main(profile_data, peer_id, user_id, game_name=m[1], hero_name=m[2])
             if (pm := re.match(r'{create profile: ([^]]*), ([^]]*)}', text)) is not None:
                 if (template_match := re.fullmatch(PROFILE_TEMPLATE, text[pm.end():].strip(), flags=re.IGNORECASE)) is not None:
                     try:
