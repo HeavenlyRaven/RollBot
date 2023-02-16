@@ -1,4 +1,5 @@
 /venv/
+/rollbot_env/
 /.idea/
 /heroes/
 /games/
