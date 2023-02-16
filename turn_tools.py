@@ -3,51 +3,6 @@ from random import shuffle
 from session_info import vk
 
 
-def add_queue(peer_id, queue_name, queue):
-
-    with open("queues.json", "r") as shuffle_file:
-        shuffle_lists = json.load(shuffle_file)
-    try:
-        queue_list = shuffle_lists[str(peer_id)]
-    except KeyError:
-        queue_list = shuffle_lists[str(peer_id)] = {}
-    if not queue_name:
-        queue_name = f'Q{len(queue_list)}'
-    shuffle_lists[str(peer_id)][queue_name] = queue
-    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно добавлена.')
-    vk.messages.pin(peer_id=peer_id,
-                    message_id=vk.messages.send(random_id=0, peer_id=peer_id, message=f"{queue_name}: {' — '.join(queue)}"))
-    with open("queues.json", "w") as shuffle_file:
-        json.dump(shuffle_lists, shuffle_file, indent=4, ensure_ascii=False)
-
-
-def delete_queue(peer_id, queue_name):
-
-    with open("queues.json", "r") as shuffle_file:
-        shuffle_lists = json.load(shuffle_file)
-    try:
-        shuffle_lists[str(peer_id)].pop(queue_name)
-        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
-        with open("queues.json", "w") as shuffle_file:
-            json.dump(shuffle_lists, shuffle_file, indent=4, ensure_ascii=False)
-    except KeyError:
-        vk.messages.send(random_id=0, peer_id=peer_id,
-                         message=f'В этой конференции нет очереди с названием {queue_name}.')
-
-
-def delete_all_queues(peer_id):
-
-    with open("queues.json", "r") as shuffle_file:
-        shuffle_lists = json.load(shuffle_file)
-    try:
-        shuffle_lists.pop(str(peer_id))
-        vk.messages.send(random_id=0, peer_id=peer_id, message='Все очереди были успешно удалены.')
-        with open("queues.json", "w") as shuffle_file:
-            json.dump(shuffle_lists, shuffle_file, indent=4, ensure_ascii=False)
-    except KeyError:
-        vk.messages.send(random_id=0, peer_id=peer_id, message='В этой конференции нет ни одной очереди.')
-
-
 def shuffle_queue(peer_id, queue_name):
 
     with open("queues.json", "r") as shuffle_file:

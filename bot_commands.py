@@ -2,7 +2,45 @@ import json
 import os
 
 from session_info import vk
-from game import Game, GameDoesNotExistError
+from game import Game, GameDoesNotExistError, QueueNotFoundError
+
+
+def add_queue(peer_id, queue_name, queue):
+    try:
+        game = Game.load(peer_id)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+    else:
+        game.add_queue(queue, name=queue_name)
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно добавлена в игру.')
+        vk.messages.pin(peer_id=peer_id, message_id=vk.messages.send(random_id=0, peer_id=peer_id, message=f"{queue_name}: {' — '.join(queue)}"))
+        game.save()
+
+
+def delete_queue(peer_id, queue_name):
+    try:
+        game = Game.load(peer_id)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+    else:
+        try:
+            game.delete_queue(queue_name)
+            vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
+        except QueueNotFoundError:
+            vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        else:
+            game.save()
+                 
+
+def delete_all_queues(peer_id):
+    try:
+        game = Game.load(peer_id)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+    else:
+        game.queues.clear()
+        vk.messages.send(random_id=0, peer_id=peer_id, message='Все очереди были успешно удалены.')
+        game.save() 
 
 
 def create_game(peer_id, user_id, name):
@@ -37,9 +75,8 @@ def make_main(profile_data, peer_id, user_id, game_name, hero_name):
         vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием не существует.")
     else:
         game.players[user_id] = hero_name
+        vk.messages.send(random_id=0, peer_id=peer_id, messgae=f"Теперь вашим главным персонажем в {game_name} является {profile_data['nominative']}")
         game.save()
-        vk.messages.send(random_id=0, peer_id=peer_id,
-                         messgae=f"Теперь вашим главным персонажем в {game_name} является {profile_data['nominative']}")
 
 
 def notify_about_reaction(peer_id, name):

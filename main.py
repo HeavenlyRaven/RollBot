@@ -44,11 +44,11 @@ for event in longpoll.listen():
                     elif (m := re.match(r'\[choose: ([^]]*)]', command)) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"[{choice(m[1].split(',')).strip()}]")
                     elif (m := re.match(r'\[add queue\s?([^]]*): ([^]]*)]', command)) is not None:
-                        tt.add_queue(peer_id, queue_name=m[1], queue=m[2].split(', '))
+                        bc.add_queue(peer_id, queue_name=m[1], queue=m[2].split(', '))
                     elif (m := re.match(r'\[delete queue: ([^]]*)]', command)) is not None:
-                        tt.delete_queue(peer_id, queue_name=m[1])
+                        bc.delete_queue(peer_id, queue_name=m[1])
                     elif re.match(r'\[delete all queues]', command) is not None:
-                        tt.delete_all_queues(peer_id)
+                        bc.delete_all_queues(peer_id)
                     elif (m := re.match(r'\[add ((?:(?!{\d+})[^]])*)(\s{(\d+)})?: ([^]]*)]', command)) is not None:
                         if (profile_data := accessible_profile_data(user_id, peer_id, name=m[4])) is not None:
                             bc.add_item(profile_data, peer_id, name=m[4], item=m[1], number=int(m[3]) if m[2] else 1)

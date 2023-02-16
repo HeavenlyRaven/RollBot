@@ -3,7 +3,7 @@
 Game mechanics:
 
 - [x] ```[create game: %gname%]```
-- [ ] ```[make main in %gname%: %char_name%]```
+- [x] ```[make main in %gname%: %char_name%]```
 - [ ] ```[assign GM in %gname%]```
 
 Turn tools:

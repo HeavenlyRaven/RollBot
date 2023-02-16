@@ -9,6 +9,11 @@ class GameDoesNotExistError(Exception):
     pass
 
 
+class QueueNotFoundError(Exception):
+    """Raised when a queue with such name is not found"""
+    pass
+
+
 class Game:
 
     def __init__(self, name, chat_id, gm_id, players=None, queues=None):
@@ -23,7 +28,7 @@ class Game:
             chat_members = vk.messages.getConversationMembers(peer_id=chat_id)
             self.players = {int(item["member_id"]): None for item in chat_members["items"]}
 
-        self.queues = queues if queues is not None else []
+        self.queues = queues if queues is not None else {}
 
     @classmethod
     def exists(cls, identifier):
@@ -51,3 +56,17 @@ class Game:
 
         with open(f"games/{self.name}.json", 'w', encoding="utf-8") as game_file:
             json.dump(game_data, game_file, indent=4, ensure_ascii=False)
+
+    def add_queue(self, queue, name=None):
+
+        if name is None:
+            name = f"Q{len(self.queues)}"
+
+        self.queues[name] = queue
+
+    def delete_queue(self, name):
+
+        try:
+            self.queues.pop(name)
+        except KeyError:
+            raise QueueNotFoundError
