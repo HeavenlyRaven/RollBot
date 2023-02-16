@@ -1,6 +1,7 @@
 /venv/
 /rollbot_env/
 /.idea/
+/.vscode/
 /heroes/
 /games/
 queues.json
