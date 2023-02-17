@@ -25,10 +25,10 @@ def delete_queue(peer_id, queue_name):
     else:
         try:
             game.delete_queue(queue_name)
-            vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
         except QueueNotFoundError:
             vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         else:
+            vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
             game.save()
                  
 
@@ -40,7 +40,22 @@ def delete_all_queues(peer_id):
     else:
         game.queues.clear()
         vk.messages.send(random_id=0, peer_id=peer_id, message='Все очереди были успешно удалены.')
-        game.save() 
+        game.save()
+
+
+def shuffle_queue(peer_id, queue_name):
+    try:
+        game = Game.load(peer_id)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+    else:
+        try:
+            game.shuffle_queue(queue_name)
+        except QueueNotFoundError:
+            vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        else:
+            game.display_queue(queue_name, pin=True)
+            game.save()
 
 
 def create_game(peer_id, user_id, name):

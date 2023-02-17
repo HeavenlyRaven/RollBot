@@ -1,35 +1,5 @@
 import json
-from random import shuffle
 from session_info import vk
-
-
-def shuffle_queue(peer_id, queue_name):
-
-    with open("queues.json", "r") as shuffle_file:
-        shuffle_lists = json.load(shuffle_file)
-
-    SHUFFLED = True
-    if queue_name == "all":
-        try:
-            for queue_name, queue in shuffle_lists[str(peer_id)].items():
-                shuffle(queue)
-        except KeyError:
-            SHUFFLED = False
-            vk.messages.send(random_id=0, peer_id=peer_id, message='В этой конференции нет ни одной очереди.')
-    else:
-        try:
-            shuffle(shuffle_lists[str(peer_id)][queue_name])
-        except KeyError:
-            SHUFFLED = False
-            vk.messages.send(random_id=0, peer_id=peer_id,
-                             message=f'В этой конференции нет очереди с названием {queue_name}.')
-    if SHUFFLED:
-        shuffle_text = ""
-        for queue_name, queue in shuffle_lists[str(peer_id)].items():
-            shuffle_text += f"{queue_name}: {' — '.join(queue)}\n"
-        vk.messages.pin(peer_id=peer_id, message_id=vk.messages.send(random_id=0, peer_id=peer_id, message=shuffle_text))
-        with open("queues.json", "w") as shuffle_file:
-            json.dump(shuffle_lists, shuffle_file, indent=4, ensure_ascii=False)
 
 
 def end_turn(peer_id, name):

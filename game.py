@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 from session_info import vk
 
@@ -73,12 +74,26 @@ class Game:
             raise QueueNotFoundError
     
     def display_queue(self, name, pin=False):
-        try:
-            queue = self.queues[name]
-        except KeyError:
-            raise QueueNotFoundError
+        message_text = ""
+        if name == "all":
+            for queue_name, queue in self.queues.items():
+                message_text += f"{queue_name}: {' — '.join(queue)}\n"
         else:
-            message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=f"{name}: {' — '.join(queue)}")
-            if pin:
-                vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
-        
+            try:
+                message_text = f"{name}: {' — '.join(self.queues[name])}" 
+            except KeyError:
+                raise QueueNotFoundError      
+        message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=message_text)
+        if pin:
+            vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
+
+    def shuffle_queue(self, name):
+
+        if name == "all":
+            for queue in self.queues.values():
+                random.shuffle(queue)
+        else:
+            try:
+                random.shuffle(self.queues[name])
+            except KeyError:
+                raise QueueNotFoundError
