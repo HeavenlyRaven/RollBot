@@ -2,7 +2,37 @@ import json
 import os
 
 from session_info import vk
-from game import Game, GameDoesNotExistError, QueueNotFoundError
+from game import *
+
+
+def end_turn(peer_id, user_id, name):
+    try:
+        game = Game.load(peer_id)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+        return
+    hero_name = game.get_main(user_id) if name is None else name
+    if hero_name is None:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной игре у вас нет основного персонажа.")
+        return
+    try:
+        next_turn_hero = game.next_in_queue(hero_name)
+    except HeroNotFoundInQueuesError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной игре персонажа с таким именем нет ни в одной очереди.")
+        return
+    try:
+        with open(f'heroes/{next_turn_hero}.json', 'r') as profile:
+            profile_data = json.load(profile)
+        player_id = profile_data["player_id"]
+        genitive_name = profile_data["genitive"]
+    except FileNotFoundError:
+        if next_turn_hero == "GM":
+            player_id = game.gm_id
+            genitive_name = "Гейм Мастера"
+        else:
+            vk.messages.send(random_id=0, peer_id=peer_id, message=f'Ход окончен. Теперь ход персонажа {next_turn_hero}')
+            return
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Ход окончен. Теперь ход [id{player_id}|{genitive_name}]')
 
 
 def add_queue(peer_id, queue_name, queue):

@@ -15,6 +15,10 @@ class QueueNotFoundError(Exception):
     pass
 
 
+class HeroNotFoundInQueuesError(Exception):
+    """Raised when a hero with such in name is not found in any of the queues"""
+    pass
+
 class Game:
 
     def __init__(self, name, chat_id, gm_id, players=None, queues=None):
@@ -97,3 +101,19 @@ class Game:
                 random.shuffle(self.queues[name])
             except KeyError:
                 raise QueueNotFoundError
+
+    def get_main(self, user_id):
+        return self.players.get(user_id, None)
+
+    def next_in_queue(self, name):
+        for queue in self.queues.values():
+            try:
+                name_index = queue.index(name)
+            except ValueError:
+                continue
+            else:
+                next_hero = queue[0] if name_index == len(queue)-1 else queue[name_index+1]
+                break
+        else:
+            raise HeroNotFoundInQueuesError
+        return next_hero
