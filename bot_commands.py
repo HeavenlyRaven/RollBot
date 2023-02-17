@@ -11,9 +11,9 @@ def add_queue(peer_id, queue_name, queue):
     except GameDoesNotExistError:
         vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
     else:
-        game.add_queue(queue, name=queue_name)
-        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно добавлена в игру.')
-        vk.messages.pin(peer_id=peer_id, message_id=vk.messages.send(random_id=0, peer_id=peer_id, message=f"{queue_name}: {' — '.join(queue)}"))
+        final_name = game.add_queue(queue, name=queue_name)
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {final_name} была успешно добавлена в игру.')
+        game.display_queue(final_name, pin=True)
         game.save()
 
 

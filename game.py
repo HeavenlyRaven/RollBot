@@ -63,6 +63,7 @@ class Game:
             name = f"Q{len(self.queues)}"
 
         self.queues[name] = queue
+        return name
 
     def delete_queue(self, name):
 
@@ -70,3 +71,14 @@ class Game:
             self.queues.pop(name)
         except KeyError:
             raise QueueNotFoundError
+    
+    def display_queue(self, name, pin=False):
+        try:
+            queue = self.queues[name]
+        except KeyError:
+            raise QueueNotFoundError
+        else:
+            message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=f"{name}: {' — '.join(queue)}")
+            if pin:
+                vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
+        
