@@ -26,6 +26,10 @@ for event in longpoll.listen():
                         bc.shuffle_queue(peer_id, queue_name=m[1])
                     elif (m := re.match(r'\[reaction for ([^]]*)]', command)) is not None:
                         bc.notify_about_reaction(peer_id, name=m[1])
+                    elif re.match(r'\[request result]', command) is not None:
+                        bc.request_result(peer_id)
+                    elif re.match(r'\[request description]', command) is not None:
+                        bc.request_description(peer_id)
                     elif (m := re.match(r'\[set ra: ([^]]*): ([^]]*)]', command)) is not None:
                         if (profile_data := accessible_profile_data(user_id, peer_id, name=m[2])) is not None:
                             bc.set_ra(profile_data, peer_id, name=m[2], ready_action=m[1])

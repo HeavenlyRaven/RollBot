@@ -1,5 +1,7 @@
-from session_info import vk
 import json
+
+from session_info import vk
+from game import Game
 
 EQUIP_LIST = r'(right hand|left hand|waist|clothes|inventory)'
 
@@ -30,3 +32,12 @@ def accessible_profile_data(user_id, peer_id, name):
     except FileNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message="Такого персонажа нет в журнале")
         return None
+
+
+def game_required_in_chat(command):
+    def wrapper(peer_id, *args, **kwargs):
+        if Game.exists(peer_id):
+            command(peer_id, *args, **kwargs)
+        else:
+            vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+    return wrapper
