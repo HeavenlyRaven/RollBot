@@ -4,8 +4,6 @@ mkdir heroes
 mkdir games
 # creating config.json
 echo '{"token": "", "admin_id": null, "group_id": null}' > config.json
-# creating queues.json
-echo '{}' > queues.json
 # creating a virtual environment
 python3 -m venv ./rollbot_env
 # installing dependencies
