@@ -31,7 +31,7 @@ class Game:
             self.players = players
         else:
             chat_members = vk.messages.getConversationMembers(peer_id=chat_id)
-            self.players = {int(item["member_id"]): None for item in chat_members["items"]}
+            self.players = {item["member_id"]: None for item in chat_members["items"]}
 
         self.queues = queues if queues is not None else {}
 
@@ -103,7 +103,10 @@ class Game:
                 raise QueueNotFoundError
 
     def get_main(self, user_id):
-        return self.players.get(user_id, None)
+        return self.players.get(str(user_id), None)
+
+    def set_main(self, user_id, hero_name):
+        self.players[str(user_id)] = hero_name
 
     def next_in_queue(self, name):
         for queue in self.queues.values():

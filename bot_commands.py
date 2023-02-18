@@ -81,7 +81,7 @@ def create_game(peer_id, user_id, name):
         vk.messages.send(random_id=0, peer_id=peer_id, message="Игра с таким названием уже существует.")
     else:
         Game(name=name, chat_id=peer_id, gm_id=user_id).save()
-        os.symlink(f"games/{name}.json", f"games/{peer_id}.json")
+        os.symlink(f"{name}.json", f"games/{peer_id}.json")
         vk.messages.send(random_id=0, peer_id=peer_id, message=f"Игра с названием {name} была успешно создана в текущей конференции.")
 
 
@@ -105,7 +105,7 @@ def make_main(profile_data, peer_id, user_id, game_name, hero_name):
     except GameDoesNotExistError:
         vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием не существует.")
     else:
-        game.players[user_id] = hero_name
+        game.set_main(user_id, hero_name)
         vk.messages.send(random_id=0, peer_id=peer_id, messgae=f"Теперь вашим главным персонажем в {game_name} является {profile_data['nominative']}")
         game.save()
 

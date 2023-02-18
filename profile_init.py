@@ -28,7 +28,7 @@ def init(peer_id, user_id, template_match, eng_name, gen_name, game_name, main):
         return
     rp_id = game.chat_id
     if main:
-        game.players[user_id] = eng_name
+        game.set_main(user_id, eng_name)
         game.save()
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Профиль {gen_name} успешно создан.')
 
