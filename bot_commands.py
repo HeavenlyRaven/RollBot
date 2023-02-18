@@ -95,6 +95,7 @@ def delete_game(peer_id, user_id, name):
             vk.messages.send(random_id=0, peer_id=peer_id,
                              message="У вас нет права доступа. Только ГМ может удалить игру.")
         else:
+            vk.messages.send(random_id=0, peer_id=peer_id, message="Игра с названием {name} была успешно удалена.")
             os.remove(f"games/{name}.json")
             os.remove(f"games/{game.chat_id}.json")
 
