@@ -1,11 +1,37 @@
 import json
+import os
+
+from session_info import vk
+from game import Game, GameDoesNotExistError
 
 
 def auto_stat(value):
     return int(value) if value is not None else 60
 
 
-def init(user_id, rp_id, template_match, eng_name, gen_name):
+def init(peer_id, user_id, template_match, eng_name, gen_name, game_name, main):
+
+    if eng_name == "GM":
+        vk.messages.send(random_id=0, peer_id=peer_id, message='Имя GM зарезервировано. Выберите, пожалуйста, другое.')
+        return
+    if os.path.isfile(f"heroes/{eng_name}.json"):
+        vk.messages.send(random_id=0, peer_id=peer_id, message='Профиль с таким именем уже существует')
+        return
+    if game_name is None:
+        game_identifier = peer_id
+    else:
+        game_identifier = game_name
+    try:
+        game = Game.load(game_identifier)
+    except GameDoesNotExistError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="Игры с таким названием или в данной конференции не существует.")
+        return
+    rp_id = game.chat_id
+    if main:
+        game.players[user_id] = eng_name
+        game.save()
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Профиль {gen_name} успешно создан.')
+
     tm = template_match
     profile_data = {
                     "player_id": user_id,

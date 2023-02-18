@@ -77,18 +77,11 @@ for event in longpoll.listen():
                     elif (m := re.match(r'\[make main in ([^]]*): ([^]]*)]', command)) is not None:
                         if (profile_data := accessible_profile_data(user_id, peer_id, name=m[2])) is not None:
                             bc.make_main(profile_data, peer_id, user_id, game_name=m[1], hero_name=m[2])
-            if (pm := re.match(r'{create profile: ([^]]*), ([^]]*)}', text)) is not None:
+            if (pm := re.match(r'{create( main)? profile(?: in ([^}]*))?: ([^}]*), ([^}]*)}', text)) is not None:
                 if (template_match := re.fullmatch(PROFILE_TEMPLATE, text[pm.end():].strip(), flags=re.IGNORECASE)) is None:
                     vk.messages.send(random_id=0, peer_id=peer_id, message='Профиль не соответствует шаблону.')
-                elif pm[1] == "GM":
-                    vk.messages.send(random_id=0, peer_id=peer_id, message='Имя GM зарезервировано. Выберите, пожалуйста, другое.')
                 else:
-                    try:
-                        init(user_id, peer_id, template_match, eng_name=pm[1], gen_name=pm[2])
-                    except FileExistsError:
-                        vk.messages.send(random_id=0, peer_id=peer_id, message='Профиль с таким именем уже существует')
-                    else:
-                        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Профиль {pm[2]} успешно создан.')
+                    init(peer_id, user_id, template_match, eng_name=pm[3], gen_name=pm[4], game_name=pm[2], main=False if pm[1] is None else True)          
         except BaseException as error:
             vk.messages.send(random_id=0, peer_id=peer_id,
                              message="Короче, Егор, опять какой-то кринж с ботом произошёл. Отправил всю инфу в лс.")
