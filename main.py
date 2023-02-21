@@ -3,7 +3,7 @@ import re
 from random import choice
 
 from session_info import vk, vk_session, GROUP_ID, ADMIN_ID
-from utils import EQUIP_LIST, PROFILE_TEMPLATE, accessible_profile_data
+from utils import PROFILE_TEMPLATE, accessible_profile_data
 from roll import roll
 from profile_init import init
 import bot_commands as bc
@@ -52,22 +52,6 @@ for event in longpoll.listen():
                         bc.delete_queue(peer_id, queue_name=m[1])
                     elif re.match(r'\[delete all queues]', command) is not None:
                         bc.delete_all_queues(peer_id)
-                    elif (m := re.match(r'\[add ((?:(?!{\d+})[^]])*)(\s{(\d+)})?: ([^]]*)]', command)) is not None:
-                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[4])) is not None:
-                            bc.add_item(profile_data, peer_id, name=m[4], item=m[1], number=int(m[3]) if m[2] else 1)
-                    elif (m := re.match(r'\[remove ((?:(?!{\d+})[^]])*)(\s{(\d+)})?: ([^]]*)]', command)) is not None:
-                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[4])) is not None:
-                            bc.remove_item(profile_data, peer_id, name=m[4], item=m[1], number=int(m[3]) if m[2] else 1)
-                    elif (m := re.match(r'\[equip \('+EQUIP_LIST+r' > '+EQUIP_LIST+r'\) ((?:(?!{\d+})[^]])*)\s?({(\d+)})?\s?: ([^]]*)]', command)) is not None:
-                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[6])) is not None:
-                            bc.equip(profile_data, peer_id, name=m[6], item=m[3], number=int(m[5]) if m[4] else 1, first_container=m[1],
-                                     second_container=m[2])
-                    elif (m := re.match(r'\[learn ([^]]*): ([^]]*)]', command)) is not None:
-                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[2])) is not None:
-                            bc.learn(profile_data, peer_id, name=m[2], skill=m[1])
-                    elif (m := re.match(r'\[unlearn ([^]]*): ([^]]*)]', command)) is not None:
-                        if (profile_data := accessible_profile_data(user_id, peer_id, name=m[2])) is not None:
-                            bc.unlearn(profile_data, peer_id, name=m[2], skill=m[1])
                     elif re.match(r'\[get id]', command) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"ID этой конференции: {peer_id}")
                     elif (m := re.match(r'\[create game: ([^]]*)]', command)) is not None:

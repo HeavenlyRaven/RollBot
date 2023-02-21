@@ -3,8 +3,6 @@ import json
 from session_info import vk
 from game import Game
 
-EQUIP_LIST = r'(right hand|left hand|waist|clothes|inventory)'
-
 PROFILE_TEMPLATE = r'''Имя: (.*)
 Пол: (мужской|женский)(?:
 Ведущая рука: (правая|левая)
