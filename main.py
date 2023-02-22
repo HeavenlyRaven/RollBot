@@ -46,7 +46,7 @@ for event in longpoll.listen():
                             bc.delete_profile(profile_data, peer_id, name=m[1])
                     elif (m := re.match(r'\[choose: ([^]]*)]', command)) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"[{choice(m[1].split(',')).strip()}]")
-                    elif (m := re.match(r'\[add queue\s?([^]]*): ([^]]*)]', command)) is not None:
+                    elif (m := re.match(r'\[add queue(?: ([^]]*))?: ([^]]*)]', command)) is not None:
                         bc.add_queue(peer_id, queue_name=m[1], queue=m[2].split(', '))
                     elif (m := re.match(r'\[delete queue: ([^]]*)]', command)) is not None:
                         bc.delete_queue(peer_id, queue_name=m[1])
