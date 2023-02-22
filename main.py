@@ -23,7 +23,7 @@ for event in longpoll.listen():
                     elif (m := re.match(r'\[end turn(?: for ([^]]*))?]', command)) is not None:
                         bc.end_turn(peer_id, user_id, name=m[1])
                     elif (m := re.match(r'\[shuffle ([^]]*)]', command)) is not None:
-                        bc.shuffle_queue(peer_id, queue_name=m[1])
+                        bc.shuffle_queue(peer_id, name=m[1])
                     elif (m := re.match(r'\[reaction for ([^]]*)]', command)) is not None:
                         bc.notify_about_reaction(peer_id, name=m[1])
                     elif re.match(r'\[request result]', command) is not None:
