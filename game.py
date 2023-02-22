@@ -19,24 +19,39 @@ class HeroNotFoundInQueuesError(Exception):
     """Raised when a hero with such in name is not found in any of the queues"""
     pass
 
+
 class Game:
 
-    def __init__(self, name, chat_id, gm_id, players=None, queues=None):
+    class Queue:
+
+        def __init__(self, name, data):
+            self.name = name
+            self.__data = data
+
+        def __str__(self):
+            return f"{self.name}: {' — '.join(self.__data)}"
+
+        def shuffle(self):
+            random.shuffle(self.__data)
+
+    def __init__(self, name, chat_id, gm_id, pinned=None, mains=None, queues=None):
 
         self.name = name
         self.chat_id = chat_id
         self.gm_id = gm_id
 
-        if players is not None:
-            self.players = players
-        else:
-            chat_members = vk.messages.getConversationMembers(peer_id=chat_id)
-            self.players = {item["member_id"]: None for item in chat_members["items"]}
+        self.__pinned = pinned if pinned is not None else []
+        self.__mains = mains if mains is not None else {}
+        self.__queues = queues if queues is not None else {}
 
-        self.queues = queues if queues is not None else {}
+    """
+    ---------------------------
+    Basic functionality methods
+    ---------------------------
+    """
 
-    @classmethod
-    def exists(cls, identifier):
+    @staticmethod
+    def exists(identifier):
         return os.path.isfile(f"games/{identifier}.json")
 
     @classmethod
@@ -55,61 +70,59 @@ class Game:
             "name": self.name,
             "chat_id": self.chat_id,
             "gm_id": self.gm_id,
-            "players": self.players,
-            "queues": self.queues
+            "pinned": self.__pinned,
+            "mains": self.__mains,
+            "queues": self.__queues
         }
 
         with open(f"games/{self.name}.json", 'w', encoding="utf-8") as game_file:
             json.dump(game_data, game_file, indent=4, ensure_ascii=False)
 
-    def add_queue(self, queue, name=None):
+    """
+    ----------------------------
+    Queues functionality methods
+    ----------------------------
+    """
+
+    @property
+    def queues(self):
+        return [self.Queue(*queue_data) for queue_data in self.__queues.items()]
+
+    def get_queue(self, name):
+        try:
+            return self.Queue(name, self.__queues[name])
+        except KeyError:
+            raise QueueNotFoundError
+
+    def add_queue(self, queue, name=None, pin=False):
 
         if name is None:
-            name = f"Q{len(self.queues)}"
+            name = f"Q{len(self.__queues)}"
 
-        self.queues[name] = queue
+        self.__queues[name] = queue
+        if pin:
+            self.add_to_pinned([name])
         return name
 
     def delete_queue(self, name):
 
         try:
-            self.queues.pop(name)
+            self.__queues.pop(name)
         except KeyError:
             raise QueueNotFoundError
-    
-    def display_queue(self, name, pin=False):
-        message_text = ""
-        if name == "all":
-            for queue_name, queue in self.queues.items():
-                message_text += f"{queue_name}: {' — '.join(queue)}\n"
-        else:
-            try:
-                message_text = f"{name}: {' — '.join(self.queues[name])}" 
-            except KeyError:
-                raise QueueNotFoundError      
-        message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=message_text)
-        if pin:
-            vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
+        try:
+            self.remove_from_pinned(name)
+        except QueueNotFoundError:
+            return
 
-    def shuffle_queue(self, name):
-
-        if name == "all":
-            for queue in self.queues.values():
-                random.shuffle(queue)
-        else:
-            try:
-                random.shuffle(self.queues[name])
-            except KeyError:
-                raise QueueNotFoundError
-
-    def get_main(self, user_id):
-        return self.players.get(str(user_id), None)
-
-    def set_main(self, user_id, hero_name):
-        self.players[str(user_id)] = hero_name
+    def clear_queues(self):
+        self.__queues.clear()
+        if self.__pinned:
+            self.__pinned.clear()
+            self.update_pinned_message()
 
     def next_in_queue(self, name):
-        for queue in self.queues.values():
+        for queue in self.__queues.values():
             try:
                 name_index = queue.index(name)
             except ValueError:
@@ -120,3 +133,44 @@ class Game:
         else:
             raise HeroNotFoundInQueuesError
         return next_hero
+
+    """
+    ---------------------------------
+    Main heroes functionality methods
+    ---------------------------------
+    """
+
+    def get_main(self, user_id):
+        return self.__mains.get(str(user_id), None)
+
+    def set_main(self, user_id, hero_name):
+        self.__mains[str(user_id)] = hero_name
+
+    """
+    -----------------------------------
+    Pinned queues functionality methods
+    -----------------------------------
+    """
+
+    @property
+    def pinned(self):
+        return self.__pinned
+
+    def add_to_pinned(self, queue_names):
+        self.__pinned.extend(queue_names)
+        self.update_pinned_message()
+
+    def remove_from_pinned(self, queue_name):
+        try:
+            self.__pinned.remove(queue_name)
+        except ValueError:
+            raise QueueNotFoundError
+        self.update_pinned_message()
+
+    def update_pinned_message(self):
+        if self.__pinned:
+            message_text = "\n".join(str(self.get_queue(queue_name)) for queue_name in self.__pinned)
+            message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=message_text)
+            vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
+        else:
+            vk.messages.unpin(peer_id=self.chat_id)

@@ -1,6 +1,3 @@
-import json
-import os
-
 from utils import game_required_in_chat
 from session_info import vk
 from game import *
@@ -36,9 +33,8 @@ def end_turn(peer_id, user_id, name):
 @game_required_in_chat
 def add_queue(peer_id, queue_name, queue):
     game = Game.load(peer_id)
-    final_name = game.add_queue(queue, name=queue_name)
+    final_name = game.add_queue(queue, name=queue_name, pin=True)
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {final_name} была успешно добавлена в игру.')
-    game.display_queue(final_name, pin=True)
     game.save()
 
 
@@ -49,29 +45,35 @@ def delete_queue(peer_id, queue_name):
         game.delete_queue(queue_name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
-    else:
-        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
-        game.save()
+        return
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
+    game.save()
                  
 
 @game_required_in_chat
 def delete_all_queues(peer_id):
     game = Game.load(peer_id)
-    game.queues.clear()
+    game.clear_queues()
     vk.messages.send(random_id=0, peer_id=peer_id, message='Все очереди были успешно удалены.')
     game.save()
 
 
 @game_required_in_chat
-def shuffle_queue(peer_id, queue_name):
+def shuffle_queue(peer_id, name):
     game = Game.load(peer_id)
+    if name == "all":
+        for queue in game.queues:
+            queue.shuffle()
+        game.update_pinned_message()
+        return
     try:
-        game.shuffle_queue(queue_name)
+        game.get_queue(name).shuffle()
     except QueueNotFoundError:
-        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
-    else:
-        game.display_queue(queue_name, pin=True)
-        game.save()
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
+        return
+    if name in game.pinned:
+        game.update_pinned_message()
+    game.save()
 
 
 def create_game(peer_id, user_id, name):
@@ -118,6 +120,7 @@ def notify_about_reaction(peer_id, name):
         vk.messages.send(random_id=0, peer_id=peer_id, message=f"Запрос на реакцию для [id{profile_data['player_id']}|{profile_data['genitive']}]")
     except FileNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f"Запрос на реакцию для персонажа {name}")
+
 
 @game_required_in_chat
 def request_result(peer_id):
