@@ -98,16 +98,15 @@ class Game:
         except KeyError:
             raise QueueNotFoundError
 
-    def add_queue(self, queue, name=None, pin=False):
+    def set_queue(self, queue, name=None, pin=False):
         if name is None:
             name = f"Q{len(self.__queues)}"
         self.__queues[name] = queue
-        if not pin:
-            return name
-        if name not in self.pinned:
-            self.add_to_pinned([name])
-        else:
+        if name in self.pinned:
             self.update_pinned_message()
+            return name
+        if pin:
+            self.add_to_pinned([name])
         return name
 
     def delete_queue(self, name):

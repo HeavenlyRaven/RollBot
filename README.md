@@ -11,5 +11,5 @@ Turn tools:
 - [ ] ```[add hero to %qname% (%pos%)]```
 - [ ] ```[remove hero from %qname%]```
 - [ ] ```[move hero in %qname%: %pos%]```
-- [ ] ```[edit %qname%: %new_queue%]```
+- [x] ```[edit %qname%: %new_queue%]```
 - [ ] ```[rename %qname%: %new_qname%]```

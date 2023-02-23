@@ -16,6 +16,7 @@ def pin_queue(peer_id, name):
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} уже закреплена.')
         return
     game.add_to_pinned([name])
+    game.save()
 
 
 @game_required_in_chat
@@ -25,6 +26,7 @@ def unpin_queue(peer_id, name):
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} не закреплена.')
         return
     game.remove_from_pinned(name)
+    game.save()
 
 
 @game_required_in_chat
@@ -65,7 +67,7 @@ def end_turn(peer_id, user_id, name):
 @game_required_in_chat
 def add_queue(peer_id, queue_name, queue):
     game = Game.load(peer_id)
-    final_name = game.add_queue(queue, name=queue_name, pin=True)
+    final_name = game.set_queue(queue, name=queue_name, pin=True)
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {final_name} была успешно добавлена в игру.')
     game.save()
 
@@ -79,6 +81,17 @@ def delete_queue(peer_id, queue_name):
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно удалена.')
+    game.save()
+
+
+@game_required_in_chat
+def edit_queue(peer_id, queue_name, new_queue):
+    game = Game.load(peer_id)
+    if queue_name not in game.queues_names:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        return
+    game.set_queue(new_queue, name=queue_name)
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {queue_name} была успешно отредактирована.')
     game.save()
                  
 

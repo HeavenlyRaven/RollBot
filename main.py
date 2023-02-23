@@ -54,6 +54,8 @@ for event in longpoll.listen():
                         bc.add_queue(peer_id, queue_name=m[1], queue=m[2].split(', '))
                     elif (m := re.match(r'\[delete queue: ([^]]*)]', command)) is not None:
                         bc.delete_queue(peer_id, queue_name=m[1])
+                    elif (m := re.match(r'\[edit ([^]]*): ([^]]*)]', command)) is not None:
+                        bc.edit_queue(peer_id, queue_name=m[1], new_queue=m[2].split(', '))
                     elif re.match(r'\[delete all queues]', command) is not None:
                         bc.delete_all_queues(peer_id)
                     elif re.match(r'\[show all queues]', command) is not None:
