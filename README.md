@@ -12,4 +12,4 @@ Turn tools:
 - [ ] ```[remove hero from %qname%]```
 - [ ] ```[move hero in %qname%: %pos%]```
 - [x] ```[edit %qname%: %new_queue%]```
-- [ ] ```[rename %qname%: %new_qname%]```
+- [x] ```[rename %qname%: %new_qname%]```
