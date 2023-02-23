@@ -105,11 +105,11 @@ class Game:
         if name is None:
             name = f"Q{len(self.__queues)}"
         self.__queues[name] = queue
-        if name in self.pinned:
+        if name in self.__pinned:
             self.update_pinned_message()
             return name
         if pin:
-            self.add_to_pinned([name])
+            self.add_to_pinned(name)
         return name
 
     def delete_queue(self, name):
@@ -125,8 +125,7 @@ class Game:
     def clear_queues(self):
         self.__queues.clear()
         if self.__pinned:
-            self.__pinned.clear()
-            self.update_pinned_message()
+            self.clear_pinned()
 
     def next_in_queue(self, name):
         for queue in self.__queues.values():
@@ -163,16 +162,30 @@ class Game:
     def pinned(self):
         return self.__pinned
 
-    def add_to_pinned(self, queue_names):
-        self.__pinned.extend(queue_names)
-        self.update_pinned_message()
+    def add_to_pinned(self, queue_name, update_message=True):
+        if queue_name not in self.queues_names:
+            raise QueueNotFoundError
+        self.__pinned.append(queue_name)
+        if update_message:
+            self.update_pinned_message()
 
-    def remove_from_pinned(self, queue_name):
+    def remove_from_pinned(self, queue_name, update_message=True):
         try:
             self.__pinned.remove(queue_name)
         except ValueError:
             raise QueueNotFoundError
-        self.update_pinned_message()
+        if update_message:
+            self.update_pinned_message()
+
+    def pin_all(self, update_message=True):
+        self.__pinned = list(self.queues_names)
+        if update_message:
+            self.update_pinned_message()
+
+    def clear_pinned(self, update_message=True):
+        self.__pinned.clear()
+        if update_message:
+            vk.messages.unpin(peer_id=self.chat_id)
 
     def update_pinned_message(self):
         if self.__pinned:

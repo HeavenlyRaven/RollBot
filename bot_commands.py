@@ -5,15 +5,22 @@ from utils import game_required_in_chat
 from session_info import vk
 from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError
 
+
 @game_required_in_chat
 def rename_queue(peer_id, name, new_name):
     game = Game.load(peer_id)
+    if new_name in game.queues_names:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь с названием {new_name} уже существует.')
+        return
     try:
         queue_data = game.get_queue(name, data_only=True)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
         return
     game.set_queue(queue_data, name=new_name)
+    if name in game.pinned:
+        game.remove_from_pinned(name, update_message=False)
+        game.add_to_pinned(new_name)
     game.delete_queue(name)
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} была успешно переименована.')
     game.save()
@@ -22,19 +29,27 @@ def rename_queue(peer_id, name, new_name):
 @game_required_in_chat
 def pin_queue(peer_id, name):
     game = Game.load(peer_id)
+    if name == "all":
+        game.pin_all()
+        game.save()
+        return
     if name not in game.queues_names:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
         return
     if name in game.pinned:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} уже закреплена.')
         return
-    game.add_to_pinned([name])
+    game.add_to_pinned(name)
     game.save()
 
 
 @game_required_in_chat
 def unpin_queue(peer_id, name):
     game = Game.load(peer_id)
+    if name == "all":
+        game.clear_pinned()
+        game.save()
+        return
     if name not in game.pinned:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} не закреплена.')
         return
@@ -80,6 +95,9 @@ def end_turn(peer_id, user_id, name):
 @game_required_in_chat
 def add_queue(peer_id, queue_name, queue):
     game = Game.load(peer_id)
+    if queue_name in game.queues_names:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь с названием {queue_name} уже существует.')
+        return
     final_name = game.set_queue(queue, name=queue_name, pin=True)
     vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {final_name} была успешно добавлена в игру.')
     game.save()
@@ -123,6 +141,7 @@ def shuffle_queue(peer_id, name):
         for queue in game.queues:
             queue.shuffle()
         game.update_pinned_message()
+        game.save()
         return
     try:
         game.get_queue(name).shuffle()
