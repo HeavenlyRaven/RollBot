@@ -5,6 +5,19 @@ from utils import game_required_in_chat
 from session_info import vk
 from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError
 
+@game_required_in_chat
+def rename_queue(peer_id, name, new_name):
+    game = Game.load(peer_id)
+    try:
+        queue_data = game.get_queue(name, data_only=True)
+    except QueueNotFoundError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
+        return
+    game.set_queue(queue_data, name=new_name)
+    game.delete_queue(name)
+    vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} была успешно переименована.')
+    game.save()
+
 
 @game_required_in_chat
 def pin_queue(peer_id, name):

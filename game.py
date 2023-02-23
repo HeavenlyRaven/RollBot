@@ -92,11 +92,14 @@ class Game:
     def queues_names(self):
         return self.__queues.keys()
 
-    def get_queue(self, name):
+    def get_queue(self, name, data_only=False):
         try:
-            return self.Queue(name, self.__queues[name])
+            data = self.__queues[name]
         except KeyError:
             raise QueueNotFoundError
+        if data_only:
+            return data
+        return self.Queue(name, data)
 
     def set_queue(self, queue, name=None, pin=False):
         if name is None:
