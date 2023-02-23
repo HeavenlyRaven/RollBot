@@ -1,6 +1,17 @@
+import json
+import os
+
 from utils import game_required_in_chat
 from session_info import vk
-from game import *
+from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError
+
+
+@game_required_in_chat
+def show_all_queues(peer_id):
+    if queues_text := "\n".join(str(queue) for queue in Game.load(peer_id).queues):
+        vk.messages.send(random_id=0, peer_id=peer_id, message=queues_text)
+    else:
+        vk.messages.send(random_id=0, peer_id=peer_id, message="В данной игре нет ни одной очереди")
 
 
 @game_required_in_chat

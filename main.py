@@ -52,6 +52,8 @@ for event in longpoll.listen():
                         bc.delete_queue(peer_id, queue_name=m[1])
                     elif re.match(r'\[delete all queues]', command) is not None:
                         bc.delete_all_queues(peer_id)
+                    elif re.match(r'\[show all queues]', command) is not None:
+                        bc.show_all_queues(peer_id)
                     elif re.match(r'\[get id]', command) is not None:
                         vk.messages.send(random_id=0, peer_id=peer_id, message=f"ID этой конференции: {peer_id}")
                     elif (m := re.match(r'\[create game: ([^]]*)]', command)) is not None:
