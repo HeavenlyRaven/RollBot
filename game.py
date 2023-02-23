@@ -88,6 +88,10 @@ class Game:
     def queues(self):
         return [self.Queue(*queue_data) for queue_data in self.__queues.items()]
 
+    @property
+    def queues_names(self):
+        return self.__queues.keys()
+
     def get_queue(self, name):
         try:
             return self.Queue(name, self.__queues[name])
@@ -95,17 +99,18 @@ class Game:
             raise QueueNotFoundError
 
     def add_queue(self, queue, name=None, pin=False):
-
         if name is None:
             name = f"Q{len(self.__queues)}"
-
         self.__queues[name] = queue
-        if pin:
+        if not pin:
+            return name
+        if name not in self.pinned:
             self.add_to_pinned([name])
+        else:
+            self.update_pinned_message()
         return name
 
     def delete_queue(self, name):
-
         try:
             self.__queues.pop(name)
         except KeyError:

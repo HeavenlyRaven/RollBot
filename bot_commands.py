@@ -7,6 +7,27 @@ from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundIn
 
 
 @game_required_in_chat
+def pin_queue(peer_id, name):
+    game = Game.load(peer_id)
+    if name not in game.queues_names:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
+        return
+    if name in game.pinned:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} уже закреплена.')
+        return
+    game.add_to_pinned([name])
+
+
+@game_required_in_chat
+def unpin_queue(peer_id, name):
+    game = Game.load(peer_id)
+    if name not in game.pinned:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} не закреплена.')
+        return
+    game.remove_from_pinned(name)
+
+
+@game_required_in_chat
 def show_all_queues(peer_id):
     if queues_text := "\n".join(str(queue) for queue in Game.load(peer_id).queues):
         vk.messages.send(random_id=0, peer_id=peer_id, message=queues_text)

@@ -24,6 +24,10 @@ for event in longpoll.listen():
                         bc.end_turn(peer_id, user_id, name=m[1])
                     elif (m := re.match(r'\[shuffle ([^]]*)]', command)) is not None:
                         bc.shuffle_queue(peer_id, name=m[1])
+                    elif (m := re.match(r'\[pin ([^]]*)]', command)) is not None:
+                        bc.pin_queue(peer_id, name=m[1])
+                    elif (m := re.match(r'\[unpin ([^]]*)]', command)) is not None:
+                        bc.unpin_queue(peer_id, name=m[1])
                     elif (m := re.match(r'\[reaction for ([^]]*)]', command)) is not None:
                         bc.notify_about_reaction(peer_id, name=m[1])
                     elif re.match(r'\[request result]', command) is not None:
