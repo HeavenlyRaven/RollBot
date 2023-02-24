@@ -63,7 +63,7 @@ for event in longpoll.listen():
                     elif (m := re.match(r'\[remove ([^]]*) from ([^]]*)]', command)) is not None:
                         bc.remove_from_queue(peer_id, hero_name=m[1], queue_name=m[2])
                     elif (m := re.match(r'\[move ([^]]*) in ([^]]*): (\d+)]', command)) is not None:
-                        bc.add_to_queue(peer_id, hero_name=m[1], queue_name=m[2], pos=m[3])
+                        bc.move_in_queue(peer_id, hero_name=m[1], queue_name=m[2], pos=m[3])
                     elif re.match(r'\[delete all queues]', command) is not None:
                         bc.delete_all_queues(peer_id)
                     elif re.match(r'\[show all queues]', command) is not None:
