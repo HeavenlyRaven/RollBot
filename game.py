@@ -170,6 +170,8 @@ class Game:
     def add_to_pinned(self, queue_name, update_message=True):
         if queue_name not in self.queues_names:
             raise QueueNotFoundError
+        if queue_name in self.pinned:
+            return
         self.__pinned.append(queue_name)
         if update_message:
             self.update_pinned_message()

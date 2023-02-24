@@ -24,13 +24,11 @@ def pin_queue(peer_id, name):
         game.pin_all()
         game.save()
         return
-    if name not in game.queues_names:
+    try:
+        game.add_to_pinned(name)
+    except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {name}.')
         return
-    if name in game.pinned:
-        vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} уже закреплена.')
-        return
-    game.add_to_pinned(name)
     game.save()
 
 
@@ -41,10 +39,11 @@ def unpin_queue(peer_id, name):
         game.clear_pinned()
         game.save()
         return
-    if name not in game.pinned:
+    try:
+        game.remove_from_pinned(name)
+    except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'Очередь {name} не закреплена.')
         return
-    game.remove_from_pinned(name)
     game.save()
 
 
