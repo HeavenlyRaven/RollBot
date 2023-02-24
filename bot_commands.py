@@ -3,7 +3,59 @@ import os
 
 from utils import game_required_in_chat
 from session_info import vk
-from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError
+from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError, HeroNotFoundInQueueError
+
+
+@game_required_in_chat
+def add_to_queue(peer_id, hero_name, queue_name, pos):
+    game = Game.load(peer_id)
+    try:
+        game.get_queue(queue_name).add(hero_name, pos)
+    except QueueNotFoundError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        return
+    if queue_name in game.pinned:
+        game.update_pinned_message()
+    vk.messages.send(random_id=0, peer_id=peer_id,
+                     message=f'Персонаж {hero_name} был успешно добавлен в очередь {queue_name}.')
+    game.save()
+
+@game_required_in_chat
+def remove_from_queue(peer_id, hero_name, queue_name):
+    game = Game.load(peer_id)
+    try:
+        queue = game.get_queue(queue_name)
+    except QueueNotFoundError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        return
+    try:
+        queue.remove(hero_name)
+    except HeroNotFoundInQueueError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной очереди нет персонажа с именем {hero_name}.')
+        return
+    if queue_name in game.pinned:
+        game.update_pinned_message()
+    vk.messages.send(random_id=0, peer_id=peer_id,
+                     message=f'Персонаж {hero_name} был успешно удалён из очереди {queue_name}.')
+    game.save()
+
+
+@game_required_in_chat
+def move_in_queue(peer_id, hero_name, queue_name, pos):
+    game = Game.load(peer_id)
+    try:
+        queue = game.get_queue(queue_name)
+    except QueueNotFoundError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
+        return
+    try:
+        queue.move(hero_name, pos)
+    except HeroNotFoundInQueueError:
+        vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной очереди нет персонажа с именем {hero_name}.')
+        return
+    if queue_name in game.pinned:
+        game.update_pinned_message()
+    game.save()
 
 
 @game_required_in_chat

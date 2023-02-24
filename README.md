@@ -8,8 +8,8 @@ Game mechanics:
 
 Turn tools:
 
-- [ ] ```[add hero to %qname% (%pos%)]```
-- [ ] ```[remove hero from %qname%]```
-- [ ] ```[move hero in %qname%: %pos%]```
+- [x] ```[add hero to %qname% (%pos%)]```
+- [x] ```[remove hero from %qname%]```
+- [x] ```[move hero in %qname%: %pos%]```
 - [x] ```[edit %qname%: %new_queue%]```
 - [x] ```[rename %qname%: %new_qname%]```

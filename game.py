@@ -20,11 +20,16 @@ class HeroNotFoundInQueuesError(Exception):
     pass
 
 
+class HeroNotFoundInQueueError(Exception):
+    """Raised when a hero with such in name is not found in the queue"""
+    pass
+
+
 class Game:
 
     class Queue:
 
-        def __init__(self, name, data):
+        def __init__(self, name: str, data: list):
             self.name = name
             self.__data = data
 
@@ -33,6 +38,25 @@ class Game:
 
         def shuffle(self):
             random.shuffle(self.__data)
+
+        def add(self, hero, pos=None):
+            if pos is None:
+                self.__data.append(hero)
+            else:
+                self.__data.insert(pos, hero)
+
+        def remove(self, hero):
+            try:
+                self.__data.remove(hero)
+            except ValueError:
+                raise HeroNotFoundInQueueError
+
+        def move(self, hero, pos):
+            try:
+                self.__data.remove(hero)
+            except ValueError:
+                raise HeroNotFoundInQueueError
+            self.__data.insert(pos, hero)
 
     def __init__(self, name, chat_id, gm_id, pinned=None, mains=None, queues=None):
 
