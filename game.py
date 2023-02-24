@@ -117,10 +117,15 @@ class Game:
             self.__queues.pop(name)
         except KeyError:
             raise QueueNotFoundError
-        try:
+        if name in self.__pinned:
             self.remove_from_pinned(name)
-        except QueueNotFoundError:
-            return
+
+    def rename_queue(self, old_qname, new_qname):
+        if old_qname not in self.queues_names:
+            raise QueueNotFoundError
+        self.__queues = {new_qname if name == old_qname else name: queue for name, queue in self.__queues.items()}
+        if old_qname in self.__pinned:
+            self.replace_in_pinned(old_qname, new_qname)
 
     def clear_queues(self):
         self.__queues.clear()
@@ -174,6 +179,17 @@ class Game:
             self.__pinned.remove(queue_name)
         except ValueError:
             raise QueueNotFoundError
+        if update_message:
+            self.update_pinned_message()
+
+    def replace_in_pinned(self, old_qname, new_qname, update_message=True):
+        if old_qname not in self.__pinned:
+            raise QueueNotFoundError(f"There is no queue named {old_qname} in pinned")
+        if new_qname not in self.queues_names:
+            raise QueueNotFoundError(f"There is no queue named {new_qname} in queues")
+        if new_qname in self.__pinned:
+            self.__pinned.remove(new_qname)
+        self.__pinned[self.__pinned.index(old_qname)] = new_qname
         if update_message:
             self.update_pinned_message()
 
