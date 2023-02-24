@@ -58,8 +58,8 @@ for event in longpoll.listen():
                         bc.edit_queue(peer_id, queue_name=m[1], new_queue=m[2].split(', '))
                     elif (m := re.match(r'\[rename ([^]]*): ([^]]*)]', command)) is not None:
                         bc.rename_queue(peer_id, name=m[1], new_name=m[2])
-                    elif (m := re.match(r'\[add ([^]]*) to ([^]]*)(?: \((\d+)\))?]', command)) is not None:
-                        bc.add_to_queue(peer_id, hero_name=m[1], queue_name=m[2], pos=m[3])
+                    elif (m := re.match(r'\[add ([^]]*) to ([^]]*)]', command)) is not None:
+                        bc.add_to_queue(peer_id, hero_name=m[1], queue_name=m[2])
                     elif (m := re.match(r'\[remove ([^]]*) from ([^]]*)]', command)) is not None:
                         bc.remove_from_queue(peer_id, hero_name=m[1], queue_name=m[2])
                     elif (m := re.match(r'\[move ([^]]*) in ([^]]*): (\d+)]', command)) is not None:

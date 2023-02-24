@@ -7,10 +7,10 @@ from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundIn
 
 
 @game_required_in_chat
-def add_to_queue(peer_id, hero_name, queue_name, pos):
+def add_to_queue(peer_id, hero_name, queue_name):
     game = Game.load(peer_id)
     try:
-        game.get_queue(queue_name).add(hero_name, pos if pos is None else int(pos))
+        game.get_queue(queue_name).add(hero_name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return

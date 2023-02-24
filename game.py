@@ -39,11 +39,8 @@ class Game:
         def shuffle(self):
             random.shuffle(self.__data)
 
-        def add(self, hero, pos=None):
-            if pos is None:
-                self.__data.append(hero)
-            else:
-                self.__data.insert(pos, hero)
+        def add(self, hero):
+            self.__data.append(hero)
 
         def remove(self, hero):
             try:
