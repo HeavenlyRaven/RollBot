@@ -10,7 +10,7 @@ from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundIn
 def add_to_queue(peer_id, hero_name, queue_name, pos):
     game = Game.load(peer_id)
     try:
-        game.get_queue(queue_name).add(hero_name, pos)
+        game.get_queue(queue_name).add(hero_name, pos if pos is None else int(pos))
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
@@ -49,7 +49,7 @@ def move_in_queue(peer_id, hero_name, queue_name, pos):
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
     try:
-        queue.move(hero_name, pos)
+        queue.move(hero_name, int(pos))
     except HeroNotFoundInQueueError:
         vk.messages.send(random_id=0, peer_id=peer_id, message=f'В данной очереди нет персонажа с именем {hero_name}.')
         return
