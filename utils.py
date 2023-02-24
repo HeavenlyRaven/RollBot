@@ -1,4 +1,5 @@
 import json
+from collections import namedtuple
 
 from session_info import vk
 from game import Game
@@ -15,6 +16,7 @@ PROFILE_TEMPLATE = r'''Имя: (.*)
 Интеллект: ([0-9][0-9]?|100)
 Восприятие: ([0-9][0-9]?|100))?'''
 
+Context = namedtuple("Context", ["text", "peer_id", "user_id"])
 
 def accessible_profile_data(user_id, peer_id, name):
 
@@ -33,9 +35,9 @@ def accessible_profile_data(user_id, peer_id, name):
 
 
 def game_required_in_chat(command):
-    def wrapper(peer_id, *args, **kwargs):
-        if Game.exists(peer_id):
-            command(peer_id, *args, **kwargs)
+    def wrapper(context, *args, **kwargs):
+        if Game.exists(context.peer_id):
+            command(context, *args, **kwargs)
         else:
-            vk.messages.send(random_id=0, peer_id=peer_id, message="В данной конференции нет игры.")
+            vk.messages.send(random_id=0, peer_id=context.peer_id, message="В данной конференции нет игры.")
     return wrapper
