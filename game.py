@@ -15,6 +15,11 @@ class QueueNotFoundError(Exception):
     pass
 
 
+class QueueAlreadyExistsError(Exception):
+    """Raised when a queue with such name already exists"""
+    pass
+
+
 class HeroNotFoundInQueuesError(Exception):
     """Raised when a hero with such in name is not found in any of the queues"""
     pass
@@ -27,34 +32,6 @@ class HeroNotFoundInQueueError(Exception):
 
 class Game:
 
-    class Queue:
-
-        def __init__(self, name: str, data: list):
-            self.name = name
-            self.__data = data
-
-        def __str__(self):
-            return f"{self.name}: {' — '.join(self.__data)}"
-
-        def shuffle(self):
-            random.shuffle(self.__data)
-
-        def add(self, hero):
-            self.__data.append(hero)
-
-        def remove(self, hero):
-            try:
-                self.__data.remove(hero)
-            except ValueError:
-                raise HeroNotFoundInQueueError
-
-        def move(self, hero, pos):
-            try:
-                self.__data.remove(hero)
-            except ValueError:
-                raise HeroNotFoundInQueueError
-            self.__data.insert(pos, hero)
-
     def __init__(self, name, chat_id, gm_id, pinned=None, mains=None, queues=None):
 
         self.name = name
@@ -62,9 +39,37 @@ class Game:
         self.gm_id = gm_id
 
         self.__pinned = pinned if pinned is not None else []
+        self.__pinned_modified = False
         self.__mains = mains if mains is not None else {}
         self.__queues = queues if queues is not None else {}
 
+    """
+    -----------------
+    Utility functions
+    -----------------
+    """
+
+    @staticmethod
+    def __can_modify_pinned(method):
+        def wrapper(self, queue_name, *args, **kwargs):
+            result = method(self, queue_name, *args, **kwargs)
+            if queue_name in self.__pinned:
+                self.__pinned_modified = True
+            return result
+        return wrapper
+    
+    @staticmethod
+    def __modifies_pinned(method):
+        def wrapper(self, *args, **kwargs):
+            result = method(self, *args, **kwargs)
+            self.__pinned_modified = True
+            return result
+        return wrapper
+    
+    @staticmethod
+    def __queue_to_str(name, queue): 
+        return f"{name}: {' — '.join(queue)}"
+    
     """
     ---------------------------
     Basic functionality methods
@@ -87,6 +92,9 @@ class Game:
 
     def save(self):
 
+        if self.__pinned_modified:
+            self.__update_pinned_message()
+
         game_data = {
             "name": self.name,
             "chat_id": self.chat_id,
@@ -106,32 +114,33 @@ class Game:
     """
 
     @property
-    def queues(self):
-        return [self.Queue(*queue_data) for queue_data in self.__queues.items()]
+    def queues_list(self):
+        return list(self.__queues.keys())
 
-    @property
-    def queues_names(self):
-        return self.__queues.keys()
-
-    def get_queue(self, name, data_only=False):
+    def __get_queue(self, name):
         try:
-            data = self.__queues[name]
+            return self.__queues[name]
         except KeyError:
             raise QueueNotFoundError
-        if data_only:
-            return data
-        return self.Queue(name, data)
+        
+    def str_queue(self, name):
+        return self.__queue_to_str(name, self.__get_queue(name))
+    
+    def str_all_queues(self):
+        return "\n".join(self.__queue_to_str(name, queue) for name, queue in self.__queues.items())
 
-    def set_queue(self, queue, name=None, pin=False):
-        if name is None:
-            name = f"Q{len(self.__queues)}"
+    def add_queue(self, queue, name=None):
+        name = f"Q{len(self.__queues)}" if name is None else name
+        if name in self.__queues:
+            raise QueueAlreadyExistsError
         self.__queues[name] = queue
-        if name in self.__pinned:
-            self.update_pinned_message()
-            return name
-        if pin:
-            self.add_to_pinned(name)
         return name
+
+    @__can_modify_pinned
+    def edit_queue(self, name, new_queue):
+        if name not in self.__queues:
+            raise QueueNotFoundError
+        self.__queues[name] = new_queue
 
     def delete_queue(self, name):
         try:
@@ -141,12 +150,13 @@ class Game:
         if name in self.__pinned:
             self.remove_from_pinned(name)
 
-    def rename_queue(self, old_qname, new_qname):
-        if old_qname not in self.queues_names:
+    def rename_queue(self, old_queue_name, new_queue_name):
+        if old_queue_name not in self.__queues:
             raise QueueNotFoundError
-        self.__queues = {new_qname if name == old_qname else name: queue for name, queue in self.__queues.items()}
-        if old_qname in self.__pinned:
-            self.replace_in_pinned(old_qname, new_qname)
+        self.__queues = {new_queue_name if name == old_queue_name else name: queue 
+                         for name, queue in self.__queues.items()}
+        if old_queue_name in self.__pinned:
+            self.replace_in_pinned(old_queue_name, new_queue_name)
 
     def clear_queues(self):
         self.__queues.clear()
@@ -165,6 +175,30 @@ class Game:
         else:
             raise HeroNotFoundInQueuesError
         return next_hero
+    
+    @__can_modify_pinned
+    def shuffle_queue(self, name):
+        random.shuffle(self.__get_queue(name))
+
+    @__can_modify_pinned
+    def add_to_queue(self, queue_name, hero_name):
+        self.__get_queue(queue_name).append(hero_name)
+
+    @__can_modify_pinned
+    def remove_from_queue(self, queue_name, hero_name):
+        try:
+            self.__get_queue(queue_name).remove(hero_name)
+        except ValueError:
+            raise HeroNotFoundInQueueError
+        
+    @__can_modify_pinned
+    def move_in_queue(self, queue_name, hero_name, position):
+        queue = self.__get_queue(queue_name)
+        try:
+            queue.remove(hero_name)
+        except ValueError:
+            raise HeroNotFoundInQueueError
+        queue.insert(position, hero_name)
 
     """
     ---------------------------------
@@ -173,7 +207,7 @@ class Game:
     """
 
     def get_main(self, user_id):
-        return self.__mains.get(str(user_id), None)
+        return self.__mains.get(str(user_id))
 
     def set_main(self, user_id, hero_name):
         self.__mains[str(user_id)] = hero_name
@@ -185,50 +219,45 @@ class Game:
     """
 
     @property
-    def pinned(self):
-        return self.__pinned
+    def pinned_list(self):
+        return self.__pinned.copy()
 
-    def add_to_pinned(self, queue_name, update_message=True):
-        if queue_name not in self.queues_names:
+    @__modifies_pinned
+    def add_to_pinned(self, queue_name):
+        if queue_name not in self.__queues:
             raise QueueNotFoundError
-        if queue_name in self.pinned:
+        if queue_name in self.__pinned:
             return
         self.__pinned.append(queue_name)
-        if update_message:
-            self.update_pinned_message()
 
-    def remove_from_pinned(self, queue_name, update_message=True):
+    @__modifies_pinned
+    def remove_from_pinned(self, queue_name):
         try:
             self.__pinned.remove(queue_name)
         except ValueError:
             raise QueueNotFoundError
-        if update_message:
-            self.update_pinned_message()
 
-    def replace_in_pinned(self, old_qname, new_qname, update_message=True):
-        if old_qname not in self.__pinned:
-            raise QueueNotFoundError(f"There is no queue named {old_qname} in pinned")
-        if new_qname not in self.queues_names:
-            raise QueueNotFoundError(f"There is no queue named {new_qname} in queues")
-        if new_qname in self.__pinned:
-            self.__pinned.remove(new_qname)
-        self.__pinned[self.__pinned.index(old_qname)] = new_qname
-        if update_message:
-            self.update_pinned_message()
+    @__modifies_pinned
+    def replace_in_pinned(self, old_queue_name, new_queue_name):
+        if old_queue_name not in self.__pinned:
+            raise QueueNotFoundError(f"There is no queue named {old_queue_name} in pinned")
+        if new_queue_name not in self.__queues:
+            raise QueueNotFoundError(f"There is no queue named {new_queue_name} in queues")
+        if new_queue_name in self.__pinned:
+            self.__pinned.remove(new_queue_name)
+        self.__pinned[self.__pinned.index(old_queue_name)] = new_queue_name
 
-    def pin_all(self, update_message=True):
-        self.__pinned = list(self.queues_names)
-        if update_message:
-            self.update_pinned_message()
+    @__modifies_pinned
+    def pin_all(self):
+        self.__pinned = self.queues_list
 
-    def clear_pinned(self, update_message=True):
+    @__modifies_pinned
+    def clear_pinned(self):
         self.__pinned.clear()
-        if update_message:
-            vk.messages.unpin(peer_id=self.chat_id)
 
-    def update_pinned_message(self):
+    def __update_pinned_message(self):
         if self.__pinned:
-            message_text = "\n".join(str(self.get_queue(queue_name)) for queue_name in self.__pinned)
+            message_text = "\n".join(self.__queue_to_str(name, self.__queues[name]) for name in self.__pinned)
             message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=message_text)
             vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
         else:

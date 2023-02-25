@@ -3,38 +3,33 @@ import os
 
 from utils import game_required_in_chat
 from session_info import vk
-from game import Game, GameDoesNotExistError, QueueNotFoundError, HeroNotFoundInQueuesError, HeroNotFoundInQueueError
+from game import Game, GameDoesNotExistError, QueueNotFoundError, QueueAlreadyExistsError, HeroNotFoundInQueuesError, HeroNotFoundInQueueError
 
 
 @game_required_in_chat
 def add_to_queue(context, hero_name, queue_name):
     game = Game.load(context.peer_id)
     try:
-        game.get_queue(queue_name).add(hero_name)
+        game.add_to_queue(queue_name, hero_name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
-    if queue_name in game.pinned:
-        game.update_pinned_message()
     vk.messages.send(random_id=0, peer_id=context.peer_id,
                      message=f'Персонаж {hero_name} был успешно добавлен в очередь {queue_name}.')
     game.save()
+
 
 @game_required_in_chat
 def remove_from_queue(context, hero_name, queue_name):
     game = Game.load(context.peer_id)
     try:
-        queue = game.get_queue(queue_name)
+        game.remove_from_queue(queue_name, hero_name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
-    try:
-        queue.remove(hero_name)
     except HeroNotFoundInQueueError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной очереди нет персонажа с именем {hero_name}.')
         return
-    if queue_name in game.pinned:
-        game.update_pinned_message()
     vk.messages.send(random_id=0, peer_id=context.peer_id,
                      message=f'Персонаж {hero_name} был успешно удалён из очереди {queue_name}.')
     game.save()
@@ -44,17 +39,15 @@ def remove_from_queue(context, hero_name, queue_name):
 def move_in_queue(context, hero_name, queue_name, pos):
     game = Game.load(context.peer_id)
     try:
-        queue = game.get_queue(queue_name)
+        game.move_in_queue(queue_name, hero_name, int(pos))
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
-    try:
-        queue.move(hero_name, int(pos))
     except HeroNotFoundInQueueError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной очереди нет персонажа с именем {hero_name}.')
         return
-    if queue_name in game.pinned:
-        game.update_pinned_message()
+    vk.messages.send(random_id=0, peer_id=context.peer_id,
+                     message=f'Персонаж {hero_name} был успешно подвинут в очереди {queue_name} на возицию {pos}.')
     game.save()
 
 
@@ -65,6 +58,7 @@ def rename_queue(context, name, new_name):
         game.rename_queue(name, new_name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {name}.')
+        return
     vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'Очередь {name} была успешно переименована в {new_name}.')
     game.save()
 
@@ -101,10 +95,10 @@ def unpin_queue(context, name):
 
 @game_required_in_chat
 def show_all_queues(context):
-    if queues_text := "\n".join(str(queue) for queue in Game.load(context.peer_id).queues):
+    if queues_text := Game.load(context.peer_id).str_all_queues():
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=queues_text)
-    else:
-        vk.messages.send(random_id=0, peer_id=context.peer_id, message="В данной игре нет ни одной очереди")
+        return
+    vk.messages.send(random_id=0, peer_id=context.peer_id, message="В данной игре нет ни одной очереди")
 
 
 @game_required_in_chat
@@ -137,10 +131,11 @@ def end_turn(context, name):
 @game_required_in_chat
 def add_queue(context, queue_name, queue):
     game = Game.load(context.peer_id)
-    if queue_name in game.queues_names:
+    try:
+        final_name = game.add_queue(queue, name=queue_name)
+    except QueueAlreadyExistsError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'Очередь с названием {queue_name} уже существует.')
         return
-    final_name = game.set_queue(queue, name=queue_name, pin=True)
     vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'Очередь {final_name} была успешно добавлена в игру.')
     game.save()
 
@@ -160,10 +155,11 @@ def delete_queue(context, queue_name):
 @game_required_in_chat
 def edit_queue(context, queue_name, new_queue):
     game = Game.load(context.peer_id)
-    if queue_name not in game.queues_names:
+    try:
+        game.edit_queue(queue_name, new_queue)
+    except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {queue_name}.')
         return
-    game.set_queue(new_queue, name=queue_name)
     vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'Очередь {queue_name} была успешно отредактирована.')
     game.save()
                  
@@ -180,18 +176,15 @@ def delete_all_queues(context):
 def shuffle_queue(context, name):
     game = Game.load(context.peer_id)
     if name == "all":
-        for queue in game.queues:
-            queue.shuffle()
-        game.update_pinned_message()
+        for queue_name in game.queues_list:
+            game.shuffle_queue(queue_name)
         game.save()
         return
     try:
-        game.get_queue(name).shuffle()
+        game.shuffle_queue(name)
     except QueueNotFoundError:
         vk.messages.send(random_id=0, peer_id=context.peer_id, message=f'В данной игре нет очереди с названием {name}.')
         return
-    if name in game.pinned:
-        game.update_pinned_message()
     game.save()
 
 
