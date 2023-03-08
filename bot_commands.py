@@ -3,7 +3,7 @@ import os
 
 from utils import game_required_in_chat
 from session_info import vk
-from game import Game, GameDoesNotExistError, QueueNotFoundError, QueueAlreadyExistsError, HeroNotFoundInQueuesError, HeroNotFoundInQueueError
+from game_system.game import Game, GameDoesNotExistError, QueueNotFoundError, QueueAlreadyExistsError, HeroNotFoundInQueuesError, HeroNotFoundInQueueError
 
 
 @game_required_in_chat

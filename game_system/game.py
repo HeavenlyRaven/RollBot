@@ -83,7 +83,7 @@ class Game:
     @classmethod
     def load(cls, identifier):
         try:
-            with open(f"games/{identifier}.json", 'r') as game_file:
+            with open(f"../games/{identifier}.json", 'r') as game_file:
                 game_data = json.load(game_file)
         except FileNotFoundError:
             raise GameDoesNotExistError
@@ -104,7 +104,7 @@ class Game:
             "queues": self.__queues
         }
 
-        with open(f"games/{self.name}.json", 'w', encoding="utf-8") as game_file:
+        with open(f"../games/{self.name}.json", 'w', encoding="utf-8") as game_file:
             json.dump(game_data, game_file, indent=4, ensure_ascii=False)
 
     """

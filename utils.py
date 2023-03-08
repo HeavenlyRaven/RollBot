@@ -2,7 +2,7 @@ import json
 from collections import namedtuple
 
 from session_info import vk
-from game import Game
+from game_system.game import Game
 
 PROFILE_TEMPLATE = r'''Имя: (.*)
 Пол: (мужской|женский)(?:

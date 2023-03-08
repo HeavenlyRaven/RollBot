@@ -2,7 +2,7 @@ import json
 import os
 
 from session_info import vk
-from game import Game, GameDoesNotExistError
+from game_system.game import Game, GameDoesNotExistError
 
 
 def auto_stat(value):

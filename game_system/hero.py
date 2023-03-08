@@ -36,7 +36,7 @@ class Hero:
     @classmethod
     def load(cls, name):
         try:
-            with open(f"heroes/{name}.json", 'r') as hero_file:
+            with open(f"../heroes/{name}.json", 'r') as hero_file:
                 hero_data = json.load(hero_file)
         except FileNotFoundError:
             raise HeroDoesNotExistError
@@ -64,5 +64,5 @@ class Hero:
             "game_chat_id": self.game_chat_id
         }
 
-        with open(f"heroes/{self.name}.json", 'w', encoding="utf-8") as hero_file:
+        with open(f"../heroes/{self.name}.json", 'w', encoding="utf-8") as hero_file:
             json.dump(hero_data, hero_file, indent=4, ensure_ascii=False)
