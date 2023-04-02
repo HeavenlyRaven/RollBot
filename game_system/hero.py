@@ -100,6 +100,7 @@ class Hero:
         with open(f"heroes/{self.name}.json", 'w', encoding="utf-8") as hero_file:
             json.dump(hero_data, hero_file, indent=4, ensure_ascii=False)
 
+    @property
     def profile_text(self) -> str:
 
         return f'''Имя: {self.nominative}
