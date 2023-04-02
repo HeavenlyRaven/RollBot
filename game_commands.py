@@ -196,7 +196,7 @@ async def end_turn(context: Context, name: str | None):
             await avk.send_message(context.peer_id, f'Ход окончен. Теперь ход персонажа {next_turn_hero}')
             return
     await avk.send_message(context.peer_id, f'Ход окончен. Теперь ход [id{player_id}|{genitive_name}]')
-    manager.spawn_task(coro=turn_timer(context.peer_id, next_turn_hero_name, player_id, genitive_name), 
+    manager.spawn_task(coro=turn_timer(manager, context.peer_id, next_turn_hero_name, player_id, genitive_name), 
                        payload={"game_chat_id": context.peer_id, "hero_name": next_turn_hero_name})
     
 

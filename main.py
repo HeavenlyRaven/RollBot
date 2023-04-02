@@ -1,7 +1,7 @@
 import logging
 logging.disable()
 
-from bot_tools import AsyncLongPollBot
+from bot_tools import AsyncLongPollBot, Context
 
 from config import avk, GROUP_ID, ADMIN_ID
 from game_commands import cmdr as game_commander
@@ -13,5 +13,8 @@ bot.extend_commander(game_commander)
 bot.extend_commander(hero_commander)
 bot.extend_commander(basic_commander)
 
+@bot.command(r"\[manager]")
+async def manager(context: Context):
+    await bot.notify_admin(repr(context.manager))
 
 bot.polling()
