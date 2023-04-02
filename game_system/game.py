@@ -2,8 +2,6 @@ import json
 import os
 import random
 
-from session_info import vk
-
 
 class GameDoesNotExistError(Exception):
     """Raised when a game with such name or id does not exist"""
@@ -83,7 +81,7 @@ class Game:
     @classmethod
     def load(cls, identifier):
         try:
-            with open(f"../games/{identifier}.json", 'r') as game_file:
+            with open(f"games/{identifier}.json", 'r') as game_file:
                 game_data = json.load(game_file)
         except FileNotFoundError:
             raise GameDoesNotExistError
@@ -91,9 +89,6 @@ class Game:
             return cls(**game_data)
 
     def save(self):
-
-        if self.__pinned_modified:
-            self.__update_pinned_message()
 
         game_data = {
             "name": self.name,
@@ -104,7 +99,7 @@ class Game:
             "queues": self.__queues
         }
 
-        with open(f"../games/{self.name}.json", 'w', encoding="utf-8") as game_file:
+        with open(f"games/{self.name}.json", 'w', encoding="utf-8") as game_file:
             json.dump(game_data, game_file, indent=4, ensure_ascii=False)
 
     """
@@ -221,6 +216,10 @@ class Game:
     @property
     def pinned_list(self):
         return self.__pinned.copy()
+    
+    @property
+    def pinned_modified(self):
+        return self.__pinned_modified
 
     @__modifies_pinned
     def add_to_pinned(self, queue_name):
@@ -255,10 +254,5 @@ class Game:
     def clear_pinned(self):
         self.__pinned.clear()
 
-    def __update_pinned_message(self):
-        if self.__pinned:
-            message_text = "\n".join(self.__queue_to_str(name, self.__queues[name]) for name in self.__pinned)
-            message_id = vk.messages.send(random_id=0, peer_id=self.chat_id, message=message_text)
-            vk.messages.pin(peer_id=self.chat_id, message_id=message_id)
-        else:
-            vk.messages.unpin(peer_id=self.chat_id)
+    def generate_pinned_message(self):
+        return "\n".join(self.__queue_to_str(name, self.__queues[name]) for name in self.__pinned) if self.__pinned else None

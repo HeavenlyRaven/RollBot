@@ -1,11 +1,10 @@
 from random import randint
 import re
-import json
 
-from session_info import vk
+from game_system import Hero, HeroDoesNotExistError
 
 
-def roll(toss, user_id, peer_id):
+async def roll(avk, toss, user_id, peer_id):
     profile_player = False
     std_stat = True
     sval = re.search(r'\(\d+\)', toss)
@@ -45,22 +44,22 @@ def roll(toss, user_id, peer_id):
     if re.search(r'\b[Ff][Oo][Rr]\s[^\]]*\]', toss) is not None:
         playername = namestat(toss).strip()
         try:
-            with open(f'heroes/{playername}.json', 'r') as profile:
-                profile_data = json.load(profile)
-            name = profile_data['genitive']
-            profile_player = True
-        except FileNotFoundError:
+            hero = Hero.load(playername)
+        except HeroDoesNotExistError:
             name = f'персонажа {playername}'
+        else:
+            name = hero.genitive
+            profile_player = True
     elif user_id > 0:
-        info = vk.users.get(user_ids=(user_id), name_case="gen")[0]
-        name = info["first_name"]+' '+info["last_name"]
+        info = (await avk.users.get(user_ids=[user_id], name_case="gen"))[0]
+        name = info.first_name+' '+info.last_name
     else:
         name = "бота какого-то"
     rn = randint(1, 120)
     if sval is not None:
         val = int(sval[0][1:-1])
     elif std_stat and profile_player:
-        val = profile_data[inp_char]
+        val = hero.__getattribute__(inp_char)
     else:
         val = 60
     if val == 0:
@@ -78,9 +77,7 @@ def roll(toss, user_id, peer_id):
         t = 'КРИТИЧЕСКИЙ ПРОВАЛ.\n'
     else:
         t = 'ПРОВАЛ.\n'
-    check_message = f'Проверка с d120 для {name}{char} со значением {val} (сложность: {diff_val}): {rn}. {t}'
-    for j in range(0, len(check_message), 4096):
-        vk.messages.send(random_id=0, peer_id=peer_id, message=check_message[j:j + 4096])
+    await avk.send_message(peer_id, f'Проверка с d120 для {name}{char} со значением {val} (сложность: {diff_val}): {rn}. {t}')
 
 
 def namestat(inp, char_flag=False):
