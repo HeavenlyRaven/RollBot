@@ -16,7 +16,7 @@ def game_required_in_chat(command: Callable) -> Callable:
     @wraps(command)
     async def wrapper(context: Context, **kwargs) -> None:
         if Game.exists(context.peer_id):
-            command(context, **kwargs)
+            await command(context, **kwargs)
         else:
             await avk.send_message(peer_id=context.peer_id, text="В данной конференции нет игры.")
     return wrapper
