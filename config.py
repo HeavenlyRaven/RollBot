@@ -1,6 +1,6 @@
 import json
 
-from bot_tools import AVK
+from bot_tools import VK
 
 from typing import Final
 
@@ -12,4 +12,4 @@ TOKEN: Final[str] = config['token']
 ADMIN_ID: Final[int] = config['admin_id']
 GROUP_ID: Final[int] = config['group_id']
 
-avk = AVK(TOKEN)
+vk = VK(TOKEN)

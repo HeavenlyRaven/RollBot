@@ -1,5 +1,6 @@
 import re
 from asyncio.exceptions import CancelledError
+from asyncio import iscoroutine
 
 from typing import Callable
 
@@ -20,7 +21,9 @@ class LongPollBot:
         self.vk = vk
         self.group_id = group_id
         self.admin_id = admin_id
-        self.commander = Commander() if commander is None else commander
+        self.commander = Commander()
+        if commander is not None:
+            self.extend_commander(commander)
 
     def extend_commander(self, commander: Commander) -> None:
         self.commander.extend(commander)
@@ -30,6 +33,9 @@ class LongPollBot:
             self.commander.append(Command(pattern, function))
             return function
         return decorator
+    
+    def motify_admin(self, message: str) -> None:
+        self.vk.send_message(peer_id=self.admin_id, text=message)
         
     def polling(self) -> None:
         for event in VkBotLongPoll(vk=self.vk.session, group_id=self.group_id).listen():
@@ -48,7 +54,7 @@ class LongPollBot:
                                 break
                 except BaseException as error:
                     self.vk.send_message(peer_id=context.peer_id, text="Короче, Егор, опять какой-то кринж с ботом произошёл. Отправил всю инфу в лс.")
-                    self.vk.send_message(peer_id=self.admin_id, text=f"Данные запроса:\n\n{event.raw}\n\nИнфа об ошибке:\n\n{str(error)}")
+                    self.notify_admin(f"Данные запроса:\n\n{event.raw}\n\nИнфа об ошибке:\n\n{repr(error)}")
 
 
 class AsyncLongPollBot:
@@ -59,8 +65,9 @@ class AsyncLongPollBot:
     _commander: Commander
     _manager: TaskManager
 
-    def __init__(self, avk: AVK, group_id: int, admin_id: int, commander: Commander | None = None) -> None:
+    def __init__(self, avk: AVK, vk: VK, group_id: int, admin_id: int, commander: Commander | None = None) -> None:
         self.avk = avk
+        self.vk = vk
         self.group_id = group_id
         self.admin_id = admin_id
         self._commander = Commander()
@@ -77,8 +84,8 @@ class AsyncLongPollBot:
             return cmd_function
         return cmd_decorator
     
-    async def notify_admin(self, message: str) -> None:
-        await self.avk.send_message(peer_id=self.admin_id, text=message)
+    def notify_admin(self, message: str) -> None:
+        self.vk.send_message(peer_id=self.admin_id, text=message)
     
     def _exception_handling_callback(self, task: Task) -> None:
         try:
@@ -88,8 +95,7 @@ class AsyncLongPollBot:
         if error is None:
             return
         payload = self._manager.tasks[task]
-        self._manager.spawn_task(
-            self.notify_admin(f"Произошёл кринж.\n\nДанные:\n{payload}\n\nЗадача:\n{task.get_name()}\n\nИнфа об ошибке:\n{repr(error)}"))
+        self.notify_admin(f"Произошёл кринж.\n\nДанные:\n{payload}\n\nЗадача:\n{task.get_name()}\n\nИнфа об ошибке:\n{repr(error)}")
 
     async def _polling(self) -> None:
         async for event in AsyncVkBotLongPoll(api=self.avk, group_id=self.group_id).listen():
@@ -107,8 +113,14 @@ class AsyncLongPollBot:
                     for command in self._commander:
                         parsed = command.parse(command_text)
                         if parsed is not None:
-                            self._manager.spawn_task(coro=command.execute(context=context, **parsed),
-                                                     payload={"context": context.light(), "coro_args": parsed})
+                            try:
+                                command_exec = command.execute(context=context, **parsed)
+                            except BaseException as error:
+                                self.vk.send_message(context.peer_id, "Короче, Егор, опять какой-то кринж с ботом произошёл. Отправил всю инфу в лс.")
+                                self.notify_admin(f"Контекст:\n\n{context}\n\nКоманда: {command.function.__name__}\n\nИнфа об ошибке:\n\n{repr(error)}")
+                                break
+                            if iscoroutine(command_exec):
+                                self._manager.spawn_task(coro=command_exec, payload={"context": context.light(), "coro_args": parsed})
                             break
 
     def polling(self) -> None:

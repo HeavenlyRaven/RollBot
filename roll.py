@@ -2,9 +2,9 @@ from random import randint
 import re
 
 from game_system import Hero, HeroDoesNotExistError
+from config import vk
 
-
-async def roll(avk, toss, user_id, peer_id):
+async def roll(toss, user_id, peer_id):
     profile_player = False
     std_stat = True
     sval = re.search(r'\(\d+\)', toss)
@@ -51,8 +51,8 @@ async def roll(avk, toss, user_id, peer_id):
             name = hero.genitive
             profile_player = True
     elif user_id > 0:
-        info = (await avk.users.get(user_ids=[user_id], name_case="gen"))[0]
-        name = info.first_name+' '+info.last_name
+        info = vk.users.get(user_ids=[user_id], name_case="gen")[0]
+        name = info["first_name"]+' '+info["last_name"]
     else:
         name = "бота какого-то"
     rn = randint(1, 120)
@@ -77,7 +77,7 @@ async def roll(avk, toss, user_id, peer_id):
         t = 'КРИТИЧЕСКИЙ ПРОВАЛ.\n'
     else:
         t = 'ПРОВАЛ.\n'
-    await avk.send_message(peer_id, f'Проверка с d120 для {name}{char} со значением {val} (сложность: {diff_val}): {rn}. {t}')
+    vk.send_message(peer_id, f'Проверка с d120 для {name}{char} со значением {val} (сложность: {diff_val}): {rn}. {t}')
 
 
 def namestat(inp, char_flag=False):

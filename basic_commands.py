@@ -2,16 +2,16 @@ import random
 
 from bot_tools import Commander, Context
 
-from config import avk
+from config import vk
 
 cmdr = Commander()
 
 
 @cmdr.register(r'\[get id]')
-async def get_id(context: Context) -> None:
-    await avk.send_message(context.peer_id, f"ID этой конференции: {context.peer_id}")
+def get_id(context: Context) -> None:
+    vk.send_message(context.peer_id, f"ID этой конференции: {context.peer_id}")
 
 
 @cmdr.register(r'\[choose: (?P<options>[^]]*)]')
-async def choose(context: Context, options: str) -> None:
-    await avk.send_message(context.peer_id, f"[{random.choice(options.split(',')).strip()}]")
+def choose(context: Context, options: str) -> None:
+    vk.send_message(context.peer_id, f"[{random.choice(options.split(',')).strip()}]")
