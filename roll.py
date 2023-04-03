@@ -51,7 +51,7 @@ def roll(toss, user_id, peer_id):
             name = hero.genitive
             profile_player = True
     elif user_id > 0:
-        info = vk.users.get(user_ids=[user_id], name_case="gen")[0]
+        info = vk.api.users.get(user_ids=[user_id], name_case="gen")[0]
         name = info["first_name"]+' '+info["last_name"]
     else:
         name = "бота какого-то"
