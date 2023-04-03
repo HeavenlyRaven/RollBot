@@ -111,6 +111,10 @@ class Game:
     @property
     def queues_list(self):
         return list(self.__queues.keys())
+    
+    @property
+    def queues(self):
+        return self.__queues
 
     def __get_queue(self, name):
         try:

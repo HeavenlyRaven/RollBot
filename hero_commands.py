@@ -26,6 +26,16 @@ def try_command(context: Context, command: str):
 
 @cmdr.register(r'\[reaction for (?P<name>[^]]*)]')
 def notify_about_reaction(context: Context, name: str):
+    if name == "all":
+        try:
+            game = Game.load(context.peer_id)
+        except GameDoesNotExistError:
+            vk.send_message(context.peer_id, f"В данной конференции нет игры")
+            return
+        for queue in game.queues.values():
+            for hero_name in queue:
+                notify_about_reaction(context, hero_name)
+        return
     try:
         hero = Hero.load(name)
     except HeroDoesNotExistError:
