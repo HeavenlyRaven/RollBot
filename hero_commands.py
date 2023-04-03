@@ -130,6 +130,9 @@ def create_profile(context: Context, main: bool, game_name: str | None, hero_nam
     if hero_name == "GM":
         vk.send_message(context.peer_id, 'Имя GM зарезервировано для Гейм Мастера. Выберите, пожалуйста, другое.')
         return
+    if hero_name == "all":
+        vk.send_message(context.peer_id, 'Имя all зарезервировано. Выберите, пожалуйста, другое.')
+        return
     if Hero.exists(hero_name):
         vk.send_message(context.peer_id, 'Профиль с таким именем уже существует')
         return
