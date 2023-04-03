@@ -4,7 +4,7 @@ import re
 from game_system import Hero, HeroDoesNotExistError
 from config import vk
 
-async def roll(toss, user_id, peer_id):
+def roll(toss, user_id, peer_id):
     profile_player = False
     std_stat = True
     sval = re.search(r'\(\d+\)', toss)
