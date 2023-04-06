@@ -262,7 +262,7 @@ def shuffle_queue(context: Context, name: str):
     game.save()
 
 
-@cmdr.register(r'\[requesdt result]')
+@cmdr.register(r'\[request result]')
 @game_required_in_chat
 def request_result(context: Context):
     vk.send_message(context.peer_id, f"Запрос на описание результата действия для [id{Game.load(context.peer_id).gm_id}|Гейм Мастера]")
