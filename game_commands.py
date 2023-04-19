@@ -180,7 +180,6 @@ def end_turn(context: Context, name: str | None):
             payload = manager.tasks[task]
             if payload["game_chat_id"] == context.peer_id and payload["hero_name"] == hero_name:
                 task.cancel()
-                break
     try:
         next_turn_hero = Hero.load(next_turn_hero_name)
     except HeroDoesNotExistError:
